@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba82ff517e8ae474891b6d2612ed2ecb, type: 3}
+  m_Name: Enemy_Test
+  m_EditorClassIdentifier: Assembly-CSharp::EntityDataSO
+  unitName: Enemy_Test
+  unitType: 2
+  unitPrefab: {fileID: 7931000729785644064, guid: 9fdbd97b0e77af243b57e49ac3971650, type: 3}
+  unitId: 0
+  unitHP: 100
+  unitMP: 100
+  unitAttack: 10
+  unitDefense: 10
+  unitAP: 5
+  unitAttackRange: 1
+  skills:
+  - {fileID: 11400000, guid: 69059eb0ed8e2774d936b84f377fe8f0, type: 2}
+  - {fileID: 11400000, guid: 1519f438fbc1e86479f279623855f238, type: 2}

@@ -1,0 +1,132 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 10c4c198b0b7cff4b8418fb45dd444a5, type: 3}
+  m_Name: StageDataSO
+  m_EditorClassIdentifier: Assembly-CSharp::StageDataSO
+  stageMaxX: 20
+  stageMaxZ: 20
+  baseTile:
+    type: 0
+    tileId: 0
+    tileHeight: -1
+    tilePosX: 0
+    tilePosZ: 0
+  tiles:
+  - type: 0
+    tileId: 0
+    tileHeight: 0
+    tilePosX: 0
+    tilePosZ: 0
+  - type: 0
+    tileId: 0
+    tileHeight: 0
+    tilePosX: 1
+    tilePosZ: 0
+  - type: 0
+    tileId: 0
+    tileHeight: 0
+    tilePosX: 1
+    tilePosZ: 1
+  - type: 0
+    tileId: 0
+    tileHeight: 0
+    tilePosX: 5
+    tilePosZ: 2
+  - type: 0
+    tileId: 0
+    tileHeight: 0
+    tilePosX: 3
+    tilePosZ: 5
+  - type: 0
+    tileId: 0
+    tileHeight: 0
+    tilePosX: 3
+    tilePosZ: 6
+  - type: 0
+    tileId: 0
+    tileHeight: 0
+    tilePosX: 8
+    tilePosZ: 9
+  - type: 0
+    tileId: 0
+    tileHeight: 0
+    tilePosX: 8
+    tilePosZ: 10
+  - type: 0
+    tileId: 0
+    tileHeight: 0
+    tilePosX: 8
+    tilePosZ: 8
+  - type: 0
+    tileId: 0
+    tileHeight: 0
+    tilePosX: 9
+    tilePosZ: 9
+  - type: 0
+    tileId: 0
+    tileHeight: 0
+    tilePosX: 9
+    tilePosZ: 10
+  - type: 0
+    tileId: 0
+    tileHeight: 0
+    tilePosX: 5
+    tilePosZ: 8
+  - type: 0
+    tileId: 0
+    tileHeight: 0
+    tilePosX: 7
+    tilePosZ: 2
+  - type: 0
+    tileId: 0
+    tileHeight: 0
+    tilePosX: 2
+    tilePosZ: 4
+  - type: 0
+    tileId: 0
+    tileHeight: 0
+    tilePosX: 6
+    tilePosZ: 3
+  - type: 0
+    tileId: 0
+    tileHeight: 0
+    tilePosX: 2
+    tilePosZ: 3
+  - type: 0
+    tileId: 0
+    tileHeight: 0
+    tilePosX: 3
+    tilePosZ: 3
+  - type: 0
+    tileId: 0
+    tileHeight: 0
+    tilePosX: 10
+    tilePosZ: 12
+  entities:
+  - gridPos: {x: 5, y: 5}
+    entityId: 0
+    entityType: 2
+  - gridPos: {x: 9, y: 9}
+    entityId: 100
+    entityType: 0
+  - gridPos: {x: 10, y: 10}
+    entityId: 101
+    entityType: 0
+  - gridPos: {x: 14, y: 12}
+    entityId: 102
+    entityType: 0
+  - gridPos: {x: 7, y: 10}
+    entityId: 102
+    entityType: 0
+  - gridPos: {x: 12, y: 12}
+    entityId: 1
+    entityType: 1

@@ -1,8 +1,19 @@
-using UnityEngine;
 
-public class EnemyBase : Entity
+
+public class EnemyBase : Entity, IDamageable
 {
-   //데이터 받아오기
-   
-   //스킬 실행
+    //데이터 받아오기
+
+
+    //스킬 실행
+
+    public void TakeDamage(float damage)
+    {
+
+    }
+
+    public void Death()
+    {
+
+    }
 }
