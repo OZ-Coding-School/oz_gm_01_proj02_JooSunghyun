@@ -1,6 +1,14 @@
-using UnityEngine;
 
-public class PlayerUnitBase : Entity
+
+public class PlayerUnitBase : Entity, IDamageable
 {
-    
+    public void TakeDamage(float damage) 
+    {
+
+    }
+
+    public void Death()
+    {
+
+    }
 }

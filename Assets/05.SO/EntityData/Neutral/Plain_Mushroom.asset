@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba82ff517e8ae474891b6d2612ed2ecb, type: 3}
+  m_Name: Plain_Mushroom
+  m_EditorClassIdentifier: Assembly-CSharp::EntityDataSO
+  unitName: PlainMushroom
+  unitType: 0
+  unitPrefab: {fileID: 7052183904702436059, guid: 2db3f45240f35c243a43ee1970010924, type: 3}
+  unitId: 100
+  unitHP: 10
+  unitMP: 0
+  unitAttack: 0
+  unitDefense: 0
+  unitAP: 0
+  unitAttackRange: 0

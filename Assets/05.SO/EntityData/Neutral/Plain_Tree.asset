@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba82ff517e8ae474891b6d2612ed2ecb, type: 3}
+  m_Name: Plain_Tree
+  m_EditorClassIdentifier: Assembly-CSharp::EntityDataSO
+  unitName: PlainTree
+  unitType: 0
+  unitPrefab: {fileID: 7564097761280018339, guid: 28751ff2b8adc09429367768ee647231, type: 3}
+  unitId: 102
+  unitHP: 100
+  unitMP: 0
+  unitAttack: 0
+  unitDefense: 0
+  unitAP: 0
+  unitAttackRange: 0
