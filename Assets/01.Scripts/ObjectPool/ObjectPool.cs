@@ -5,16 +5,23 @@ public class ObjectPool<T> where T : MonoBehaviour
 {
     private readonly Queue<T> poolQueue = new Queue<T>();
     private readonly T prefab;
-    private readonly Transform parent;
+
+    public Transform Root { get; private set; }
 
     public ObjectPool(T prefab, int count, Transform parent = null)
     {
         this.prefab = prefab;
-        this.parent = parent;
+        Root = new GameObject($"{prefab.name}_pool").transform;
+        Object.DontDestroyOnLoad(Root.gameObject);
+
+        if (parent != null)
+        {
+            Root.SetParent(parent, false);
+        }
 
         for (int i = 0; i < count; i++)
         {
-            var obj = GameObject.Instantiate(prefab, parent);
+            var obj = GameObject.Instantiate(prefab, Root);
             obj.gameObject.SetActive(false);
             poolQueue.Enqueue(obj);
         }
@@ -29,7 +36,7 @@ public class ObjectPool<T> where T : MonoBehaviour
         }
         else
         {
-            obj = GameObject.Instantiate(prefab, parent);
+            obj = GameObject.Instantiate(prefab, Root);
         }
         obj.gameObject.SetActive(true);
         return obj;

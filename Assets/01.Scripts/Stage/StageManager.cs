@@ -13,13 +13,13 @@ public class StageManager : MonoBehaviour
 
     private List<Entity> mPlayerUnits;
     private List<Entity> mEnemyUnits;
+    private List<Entity> mActiveHighLIghs = new List<Entity>();
 
     private void Awake()
     {
         Instance = this;
     }
 
-    //테스트용
     private void Start()
     {
         foreach (var tile in GameManager.Instance.tileDataBase.entries)
@@ -33,12 +33,9 @@ public class StageManager : MonoBehaviour
             PoolManager.Instance.CreatePool(
                 GameManager.Instance.entityDataBase.GetPrefab(entity.unitId), 10, null);
         }
-
         PoolManager.Instance.CreatePool(highlightPrefab, 60, null);
 
-        GenerateBase();
-        GenerateMap();
-        SpawnEntities();
+        InitializeStage();
     }
 
 
@@ -55,9 +52,9 @@ public class StageManager : MonoBehaviour
         GenerateBase();
         GenerateMap();
         SpawnEntities();
-        TileOccupy();
     }
 
+    #region StageGenerate
     //스테이지 생성
     private void GenerateMap() 
     {
@@ -76,7 +73,6 @@ public class StageManager : MonoBehaviour
             mTiles[prefab.GetPosition()] = prefab;
         }
     }
-
     private void GenerateBase() 
     {
         TileSpawnData tile = mCurrStageDataSO.baseTile;
@@ -100,7 +96,6 @@ public class StageManager : MonoBehaviour
             }
         }
     }
-
     //엔티티 생성
     private void SpawnEntities() 
     {
@@ -132,49 +127,28 @@ public class StageManager : MonoBehaviour
             }
         }
     }
+    #endregion
 
-    private void TileOccupy() 
+    #region Highlight
+    public void ShowHiglight(Vector3 position) 
     {
-        foreach (var kv in mTiles) 
-        {
-            Vector3Int pos = kv.Key;
-            TileBase tile = kv.Value;
-
-            if (pos.y == -1) 
-            {
-                TileBase top = GetTopTileAt(pos.x, pos.z);
-                if (top != null && top.GetPosition().y > -1) 
-                {
-                    tile.isWalkable = false;
-                }
-            }
-        }
+        var highlight = PoolManager.Instance.GetFromPool(highlightPrefab);
+        highlight.gameObject.transform.position = position + new Vector3(0, PublicConst.TileHeights, 0);
+        highlight.gameObject.SetActive(true);
+        mActiveHighLIghs.Add(highlight);
     }
 
-    private void ClearStage() 
+    public void ClearHighlights() 
     {
-        foreach (var kv in mTiles) 
+        foreach (var hl in mActiveHighLIghs) 
         {
-            PoolManager.Instance.ReturnPool(kv.Value);
+            PoolManager.Instance.ReturnPool(hl);
         }
-        mTiles.Clear();
-
-        if (mPlayerUnits != null) 
-        {
-            foreach (var kv in mPlayerUnits)
-                PoolManager.Instance.ReturnPool(kv);
-            mPlayerUnits .Clear();
-        }
-
-        if (mEnemyUnits != null)
-        {
-            foreach (var kv in mEnemyUnits)
-                PoolManager.Instance.ReturnPool(kv);
-            mEnemyUnits.Clear();
-        }
+        mActiveHighLIghs.Clear();
     }
+    #endregion
 
-    //helper
+    #region Helper
     public TileBase GetTileAt(Vector3Int pos) 
     {
         mTiles.TryGetValue(pos, out var tile);
@@ -215,13 +189,35 @@ public class StageManager : MonoBehaviour
                 walkable.Add(kv.Key);
             }
         }
-        
         return walkable;
     }
 
     public List<Entity> GetPlayerUnits() { return mPlayerUnits; }
     public List<Entity> GetEnemyUnits() { return mEnemyUnits; }
+    #endregion
     //배틀 매니저에게 스테이지 생성완료 알려주기 
 
     //배틀 끝나면 스테이지 청소(리턴 풀 등...)
+    private void ClearStage()
+    {
+        foreach (var kv in mTiles)
+        {
+            PoolManager.Instance.ReturnPool(kv.Value);
+        }
+        mTiles.Clear();
+
+        if (mPlayerUnits != null)
+        {
+            foreach (var kv in mPlayerUnits)
+                PoolManager.Instance.ReturnPool(kv);
+            mPlayerUnits.Clear();
+        }
+
+        if (mEnemyUnits != null)
+        {
+            foreach (var kv in mEnemyUnits)
+                PoolManager.Instance.ReturnPool(kv);
+            mEnemyUnits.Clear();
+        }
+    }
 }

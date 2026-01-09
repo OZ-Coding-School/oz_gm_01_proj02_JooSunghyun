@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 827896843762728523}
   - component: {fileID: 3570242586980456510}
   - component: {fileID: 7481415991581292579}
-  - component: {fileID: 8186948940487073960}
+  - component: {fileID: 499050486044689662}
   m_Layer: 0
   m_Name: TargetHighlighter
   m_TagString: Untagged
@@ -91,7 +91,7 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &8186948940487073960
+--- !u!114 &499050486044689662
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -100,6 +100,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 8744134983256230128}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3614e6f4379b3af418f29d851fbf4644, type: 3}
+  m_Script: {fileID: 11500000, guid: 45bfd89ba5094bf429059342651b7ef7, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Entity
+  m_EditorClassIdentifier: Assembly-CSharp::NeutralBase
+  bonusAP: 0

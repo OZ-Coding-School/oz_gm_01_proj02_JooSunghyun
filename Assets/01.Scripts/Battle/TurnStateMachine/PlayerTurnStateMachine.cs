@@ -12,10 +12,10 @@ public class PlayerTurnStateMachine : TurnStateMachine
 
     public override void StartTurn()
     {
-        UnityEngine.Debug.Log("PlayerTurn");
         mActionQueue.Enqueue(new WaitInputNode(mPlayerEntity));
         //이벤트 발행
-        BattleEvents.RaiseSkillUIUpdate(mPlayerEntity.GetUnitData().skills);
+        BattleManager.Instance.BroadCastTurnInfo("Select tile to move");
+        BattleManager.Instance.BroadCastSkillUIInfo(mPlayerEntity.GetUnitData().skills);
     }
 
     public override void Update()
@@ -29,34 +29,34 @@ public class PlayerTurnStateMachine : TurnStateMachine
                 mActionQueue.Dequeue();
                 if (currentNode is WaitInputNode waitInputNode) 
                 {
-                    UnityEngine.Debug.Log("WaitInputNode");
                     TileBase selectedTile = waitInputNode.GetSelectedTile();
                     if (selectedTile != null) 
                     {
+                        BattleManager.Instance.BroadCastTurnInfo("Moving...");
                         mActionQueue.Enqueue(new MoveNode(selectedTile.GetPosition()));
                     }
                 }
                 else if (currentNode is MoveNode)
                 {
-                    UnityEngine.Debug.Log("MoveNode");
                     mActionQueue.Enqueue(new SkillSelectNode(mPlayerEntity));
+                    BattleManager.Instance.BroadCastTurnInfo("Select skill to use");
                 }
                 else if (currentNode is SkillSelectNode skillNode)
                 {
-                    UnityEngine.Debug.Log("SkillSelectNode");
                     mSelectedSkill = skillNode.GetSelectedSkill();
                     skillNode.Dispose();
-                    mActionQueue.Enqueue(new TargetSelectNode());
+                    mActionQueue.Enqueue(new TargetSelectNode(mSelectedSkill));
+                    BattleManager.Instance.BroadCastTurnInfo("Select target");
                 }
                 else if (currentNode is TargetSelectNode targetNode)
                 {
-                    UnityEngine.Debug.Log("TargetSelectNode");
                     mSelectedTarget = targetNode.GetSelectedTarget();
                     if (mSelectedSkill != null && mSelectedTarget != null)
                     {
                         mActionQueue.Enqueue(new AttackNode(mSelectedSkill, mSelectedTarget));
                     }
                     mActionQueue.Enqueue(new EndTurnNode());
+                    BattleManager.Instance.BroadCastTurnInfo("End turn");
                 }
             }
         }

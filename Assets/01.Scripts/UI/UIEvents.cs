@@ -17,4 +17,9 @@ public static class BattleEvents
         OnSkillUIUpdate?.Invoke(skills);
     }
 
+    public static event Action<string> OnTurnInfoUpdate;
+    public static void RaiseTurnInfoUpdate(string info) 
+    {
+        OnTurnInfoUpdate?.Invoke(info);
+    }
 }

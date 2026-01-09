@@ -13,8 +13,9 @@ MonoBehaviour:
   m_Name: TestSkill_2
   m_EditorClassIdentifier: Assembly-CSharp::SkillSO
   skillName: Test02
-  skillIcon: {fileID: 21300000, guid: 8c0b4005f62c5194c9609914290d2a54, type: 3}
+  skillIcon: {fileID: 21300000, guid: 5e61fec3f8e7bbb4c950b3641c53c1ce, type: 3}
   skillCost: 0
-  skillDamage: 0
+  skillDuplicator: 0
   skillRange: 0
-  targetType: 2
+  targetType: 1
+  skillType: 1
