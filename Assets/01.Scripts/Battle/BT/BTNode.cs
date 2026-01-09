@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using static UnityEngine.GraphicsBuffer;
 
 public abstract class ActionNode 
 {
@@ -13,9 +14,6 @@ public class WaitInputNode : ActionNode
     private TileBase mCurrSelectedTile;
     private bool mIsSelected = false;
 
-    private List<Entity> mHighlights = new List<Entity>();
-    private Entity mHighlightPrefab = StageManager.Instance.highlightPrefab;
-
     public WaitInputNode(Entity selectedEntity) { this.mCurrSelectedEntity = selectedEntity; }
 
     public override bool Evaluate(Entity entity)
@@ -24,23 +22,16 @@ public class WaitInputNode : ActionNode
         Vector3Int posData = new Vector3Int(entity.GetPosition().x, entity.GetPosition().y - 1, entity.GetPosition().z);
         //이동 가능한 타일들 표시
         HashSet<Vector3Int> walkableTiles
-            = AStarPathFinder.GetReachableTiles(posData, entity.GetUnitData().unitAP, StageManager.Instance.GetWalkableTiles());
-   
+            = AStarPathFinder.GetReachableTiles(posData, entity.GetUnitData().unitAP + entity.bonusAP, StageManager.Instance.GetWalkableTiles());
+
         //여기서 이펙트용 오브젝트들 표시해줘야함
-        if (mHighlights.Count == 0) 
+        foreach (var tilePos in walkableTiles)
         {
-            foreach (var tilePos in walkableTiles)
+            TileBase tile = StageManager.Instance.GetTileAt(tilePos);
+            if (tile != null)
             {
-                TileBase tile = StageManager.Instance.GetTileAt(tilePos);
-                if (tile != null)
-                {
-                    Vector3 pos = tile.transform.position;
-                    Entity highlight = PoolManager.Instance.GetFromPool(mHighlightPrefab);
-                    highlight.gameObject.transform.position 
-                        = pos + new Vector3(0, PublicConst.TileHeights, 0);
-                    highlight.gameObject.SetActive(true);
-                    mHighlights.Add(highlight);
-                }
+                Vector3 pos = tile.transform.position;
+                StageManager.Instance.ShowHiglight(pos);
             }
         }
 
@@ -60,11 +51,7 @@ public class WaitInputNode : ActionNode
                     mCurrSelectedTile = tile;
                     mIsSelected = true;
 
-                    foreach (var hl in mHighlights) 
-                    {
-                        PoolManager.Instance.ReturnPool(hl);
-                    }
-                    mHighlights.Clear();
+                    StageManager.Instance.ClearHighlights();
                 }
                 else
                 {
@@ -144,14 +131,44 @@ public class SkillSelectNode : ActionNode ,IDisposable
 
 public class TargetSelectNode : ActionNode 
 {
-    private Entity selectedTarget;
-    private bool isSelected = false;
+    private Entity mSelectedTarget;
+    private SkillSO mSelectedSkill;
+    private bool mIsSelected = false;
 
-    public Entity GetSelectedTarget() { return selectedTarget; }
+    private List<Entity> mHighlights = new List<Entity>();
+    private Entity mHighlightPrefab = StageManager.Instance.highlightPrefab;
+
+    public TargetSelectNode(SkillSO skillData) 
+    {
+        mSelectedSkill = skillData;
+    }
+
+    public Entity GetSelectedTarget() { return mSelectedTarget; }
 
     public override bool Evaluate(Entity entity) 
     {
-        if (!isSelected && Mouse.current.leftButton.wasPressedThisFrame) 
+        //스킬 사용 가능한 대상 표시
+        if (mHighlights.Count == 0) 
+        {
+            List<Entity> targets = new List<Entity>();
+            switch (mSelectedSkill.targetType) 
+            {
+                case EEntityType.Enemy:
+                    targets.AddRange(StageManager.Instance.GetEnemyUnits());
+                    break;
+                case EEntityType.PlayerUnit:
+                    targets.AddRange(StageManager.Instance.GetPlayerUnits());
+                    break;
+            }
+
+            foreach (var target in targets) 
+            {
+                StageManager.Instance.ShowHiglight(target.gameObject.transform.position);
+            }
+        }
+
+        //대상 선택
+        if (!mIsSelected && Mouse.current.leftButton.wasPressedThisFrame) 
         {
             Vector2 mousePos = Mouse.current.position.ReadValue();
             Ray ray = Camera.main.ScreenPointToRay(mousePos);
@@ -159,29 +176,41 @@ public class TargetSelectNode : ActionNode
 
             if (Physics.Raycast(ray, out hit)) 
             {
-                UnityEngine.Debug.Log($"Ray hit: {hit.collider.gameObject.name}");
                 if (hit.collider.gameObject.TryGetComponent(out Entity targetEntity)
-                    && targetEntity.GetUnitData().unitType == EEntityType.Enemy) 
+                    && targetEntity.GetUnitData().unitType == mSelectedSkill.targetType) 
                 {
-                    selectedTarget = targetEntity;
-                    isSelected = true;
+                    mSelectedTarget = targetEntity;
+                    mIsSelected = true;
+
+                    //하이라이트 집어넣기
+                    StageManager.Instance.ClearHighlights();
+
+                    //선택한 애만 남겨두기
+                    StageManager.Instance.ShowHiglight(mSelectedTarget.gameObject.transform.position);
                 }
             }
         }
 
-        return isSelected;
+        return mIsSelected;
     }
 }
 
 public class AttackNode : ActionNode 
 {
-    private SkillSO skill;
-    private Entity target;
-    public AttackNode(SkillSO skill, Entity target) { this.skill = skill; this.target = target; }
+    private SkillSO mSkill;
+    private Entity mTarget;
+    public AttackNode(SkillSO skill, Entity target) { mSkill = skill; mTarget = target; }
 
     public override bool Evaluate(Entity entity) 
     {
-        return true;
+        ISkillAction skillAction = SkillFactory.CreateSkill(mSkill);
+
+        if (skillAction != null && mTarget != null) 
+        {
+            skillAction.SkillAction(entity, mTarget);
+            return true;
+        }
+        return false;
     }
 }
 
@@ -197,7 +226,7 @@ public class EndTurnNode : ActionNode
 {
     public override bool Evaluate(Entity entity)
     {
-        UnityEngine.Debug.Log("EndTurnNode");
+        StageManager.Instance.ClearHighlights();
         BattleManager.Instance.EndCurrentTurn();
         return true;
     }

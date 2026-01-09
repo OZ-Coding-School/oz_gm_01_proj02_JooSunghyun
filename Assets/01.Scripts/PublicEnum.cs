@@ -14,6 +14,12 @@ public enum ETileType
     Snow
 }
 
+public enum ESkillType 
+{
+    NormalAttack,
+    NormalHeal
+}
+
 [System.Serializable]
 public class TileSpawnData 
 {

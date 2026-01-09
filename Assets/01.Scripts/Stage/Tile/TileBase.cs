@@ -22,12 +22,10 @@ public class TileBase : MonoBehaviour
         owner = entity;
         if (entity == null)
         {
-            Debug.Log("NotOccupied");
             isWalkable = true;
         }
         else 
         {
-            Debug.Log("Occupied");
             isWalkable = false;
         }    
     }

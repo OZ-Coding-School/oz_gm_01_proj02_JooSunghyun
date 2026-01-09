@@ -1,25 +1,30 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using TMPro;
 
-public class SkillButtonUI : MonoBehaviour
+public class BattleSceneUI : MonoBehaviour
 {
     public Button skillButton_1;
     public Button skillButton_2;
     public Image skillIcon_1;
     public Image skillIcon_2;
 
+    public TextMeshProUGUI turnInfoText;
+
     private void OnEnable()
     {
         BattleEvents.OnSkillUIUpdate += UpdateSkillUI;
+        BattleEvents.OnTurnInfoUpdate += UpdateTurnInfo;
     }
 
     private void OnDisable()
     {
         BattleEvents.OnSkillUIUpdate -= UpdateSkillUI;
+        BattleEvents.OnTurnInfoUpdate -= UpdateTurnInfo;
     }
 
-    private void UpdateSkillUI(List<SkillSO> skills) 
+    private void UpdateSkillUI(List<SkillSO> skills)
     {
         if (skills.Count > 0) skillIcon_1.sprite = skills[0].skillIcon;
         if (skills.Count > 1) skillIcon_2.sprite = skills[1].skillIcon;
@@ -30,6 +35,11 @@ public class SkillButtonUI : MonoBehaviour
 
         //새로 연결해서 이벤트 발행
         skillButton_1.onClick.AddListener(() => BattleEvents.RaiseSkillSelected(0));
-        skillButton_1.onClick.AddListener(() => BattleEvents.RaiseSkillSelected(1));
+        skillButton_2.onClick.AddListener(() => BattleEvents.RaiseSkillSelected(1));
+    }
+
+    private void UpdateTurnInfo(string text) 
+    {
+        turnInfoText.text = text;
     }
 }

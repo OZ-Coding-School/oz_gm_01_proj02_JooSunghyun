@@ -9,8 +9,17 @@ public class Entity : MonoBehaviour
     private int mPosZ;
     private float mMoveSpeed = 5f;
 
-    private TileBase mMyTile;
+    protected float mUnitHP;
+    protected float mUnitMP;
+    protected float mUnitAttack;
+    protected float mUnitDefense;
+    protected int mUnitAttackRange;
 
+    protected HealthBar mHealthBar;
+
+    public int bonusAP = 0;
+
+    private TileBase mMyTile;
     //데이터 받아오기
     private EntityDataSO unitData;
 
@@ -20,6 +29,22 @@ public class Entity : MonoBehaviour
         mPosX = x;
         mPosY = y;
         mPosZ = z;
+
+        mUnitAttack = data.unitAttack;
+        mUnitHP = data.unitHP;
+        mUnitMP = data.unitMP;
+        mUnitAttack = data.unitAttack;
+        mUnitDefense = data.unitDefense;
+        mUnitAttackRange = data.unitAttackRange;
+
+        mHealthBar = GetComponentInChildren<HealthBar>();
+        if (mHealthBar != null) 
+        {
+            mHealthBar.SetMaxHealth(GetUnitData().unitHP);
+            mHealthBar.SetHealth(mUnitHP);
+        }
+
+        OccupyTile();
     }
 
     public Vector3Int GetPosition()

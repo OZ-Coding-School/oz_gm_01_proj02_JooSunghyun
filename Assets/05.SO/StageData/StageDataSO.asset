@@ -75,7 +75,7 @@ MonoBehaviour:
     tileId: 0
     tileHeight: 0
     tilePosX: 9
-    tilePosZ: 10
+    tilePosZ: 12
   - type: 0
     tileId: 0
     tileHeight: 0
@@ -95,22 +95,37 @@ MonoBehaviour:
     tileId: 0
     tileHeight: 0
     tilePosX: 6
+    tilePosZ: 14
+  - type: 0
+    tileId: 0
+    tileHeight: 0
+    tilePosX: 18
     tilePosZ: 3
   - type: 0
     tileId: 0
     tileHeight: 0
-    tilePosX: 2
+    tilePosX: 15
     tilePosZ: 3
+  - type: 0
+    tileId: 0
+    tileHeight: 0
+    tilePosX: 17
+    tilePosZ: 12
   - type: 0
     tileId: 0
     tileHeight: 0
     tilePosX: 3
-    tilePosZ: 3
+    tilePosZ: 19
   - type: 0
     tileId: 0
     tileHeight: 0
-    tilePosX: 10
-    tilePosZ: 12
+    tilePosX: 17
+    tilePosZ: 5
+  - type: 0
+    tileId: 0
+    tileHeight: 0
+    tilePosX: 14
+    tilePosZ: 17
   entities:
   - gridPos: {x: 5, y: 5}
     entityId: 0
@@ -130,3 +145,30 @@ MonoBehaviour:
   - gridPos: {x: 12, y: 12}
     entityId: 1
     entityType: 1
+  - gridPos: {x: 5, y: 16}
+    entityId: 101
+    entityType: 0
+  - gridPos: {x: 16, y: 18}
+    entityId: 102
+    entityType: 0
+  - gridPos: {x: 17, y: 17}
+    entityId: 101
+    entityType: 0
+  - gridPos: {x: 19, y: 5}
+    entityId: 100
+    entityType: 0
+  - gridPos: {x: 12, y: 14}
+    entityId: 100
+    entityType: 0
+  - gridPos: {x: 10, y: 8}
+    entityId: 100
+    entityType: 0
+  - gridPos: {x: 5, y: 12}
+    entityId: 100
+    entityType: 0
+  - gridPos: {x: 3, y: 18}
+    entityId: 101
+    entityType: 0
+  - gridPos: {x: 15, y: 8}
+    entityId: 100
+    entityType: 0

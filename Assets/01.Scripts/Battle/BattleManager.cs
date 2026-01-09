@@ -5,8 +5,9 @@ public class BattleManager : MonoBehaviour
 {
     public static BattleManager Instance { get; private set; }
 
-    private Queue<Entity> turnOrder = new Queue<Entity>();
-    private TurnStateMachine turnStateMachine;
+    private Queue<Entity> mTurnOrder = new Queue<Entity>();
+    private TurnStateMachine mTurnStateMachine;
+
 
     private void Awake()
     {
@@ -26,7 +27,7 @@ public class BattleManager : MonoBehaviour
 
     private void Update()
     {
-        turnStateMachine.Update();
+        mTurnStateMachine.Update();
     }
 
     public void SetUp() 
@@ -34,36 +35,45 @@ public class BattleManager : MonoBehaviour
         var players = StageManager.Instance.GetPlayerUnits();
         var enemies = StageManager.Instance.GetEnemyUnits();
 
-        foreach (var player in players) { turnOrder.Enqueue(player); }
-        foreach (var enemy in enemies) { turnOrder.Enqueue(enemy); }
+        foreach (var player in players) { mTurnOrder.Enqueue(player); }
+        foreach (var enemy in enemies) { mTurnOrder.Enqueue(enemy); }
     }
 
 
     private void StartNextTurn() 
     {
-        if (turnOrder.Count == 0) { return; }
+        if (mTurnOrder.Count == 0) { return; }
 
-        Entity nextEntity = turnOrder.Dequeue();
+        Entity nextEntity = mTurnOrder.Dequeue();
 
         if (nextEntity.GetUnitData().unitType == EEntityType.PlayerUnit)
         {
             //플레이어 턴 스테이트머신으로 행동 관리
-            turnStateMachine = new PlayerTurnStateMachine(nextEntity);
+            mTurnStateMachine = new PlayerTurnStateMachine(nextEntity);
         }
         else if(nextEntity.GetUnitData().unitType == EEntityType.Enemy)
         {
             //에너미는 에너미걸로
-            turnStateMachine = new EnemyTurnStateMachine(nextEntity);
+            mTurnStateMachine = new EnemyTurnStateMachine(nextEntity);
         }
 
-        turnStateMachine.StartTurn();
+        mTurnStateMachine.StartTurn();
 
-        turnOrder.Enqueue(nextEntity);
+        mTurnOrder.Enqueue(nextEntity);
     }
 
     public void EndCurrentTurn() 
     {
         StartNextTurn();
+    }
+
+    public void BroadCastTurnInfo(string info) 
+    {
+        BattleEvents.RaiseTurnInfoUpdate(info);
+    }
+    public void BroadCastSkillUIInfo(List<SkillSO> skills) 
+    {
+        BattleEvents.RaiseSkillUIUpdate(skills);
     }
 
     private bool IsBattleEnd() 
