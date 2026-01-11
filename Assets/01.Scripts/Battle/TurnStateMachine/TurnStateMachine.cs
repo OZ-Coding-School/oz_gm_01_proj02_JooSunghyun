@@ -13,7 +13,6 @@ public abstract class TurnStateMachine
 
     public abstract void StartTurn();
 
-
     public virtual void Update() 
     {
         if (mActionQueue.Count > 0) 

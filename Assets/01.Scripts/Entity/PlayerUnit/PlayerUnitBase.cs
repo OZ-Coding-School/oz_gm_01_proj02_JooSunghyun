@@ -1,7 +1,7 @@
 using Unity;
 using UnityEngine;
 
-public class PlayerUnitBase : Entity, IDamageable
+public class PlayerUnitBase : Entity, IDamageable, ICameraChaseable
 {
     public void TakeDamage(float damage) 
     {
