@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using static UnityEngine.GraphicsBuffer;
+using static UnityEngine.EventSystems.EventTrigger;
 
 public abstract class ActionNode 
 {
@@ -13,16 +13,19 @@ public class WaitInputNode : ActionNode
     private Entity mCurrSelectedEntity;
     private TileBase mCurrSelectedTile;
     private bool mIsSelected = false;
+    private bool mIsHighlighted = false;
+    private HashSet<Vector3Int> mWalkable = new HashSet<Vector3Int>();
 
     public WaitInputNode(Entity selectedEntity) { this.mCurrSelectedEntity = selectedEntity; }
 
-    public override bool Evaluate(Entity entity)
+    private void SetHighlight(Entity entity) 
     {
         //플레이어가 서있는 타일 기준
         Vector3Int posData = new Vector3Int(entity.GetPosition().x, entity.GetPosition().y - 1, entity.GetPosition().z);
         //이동 가능한 타일들 표시
         HashSet<Vector3Int> walkableTiles
             = AStarPathFinder.GetReachableTiles(posData, entity.GetUnitData().unitAP + entity.bonusAP, StageManager.Instance.GetWalkableTiles());
+        mWalkable = walkableTiles;
 
         //여기서 이펙트용 오브젝트들 표시해줘야함
         foreach (var tilePos in walkableTiles)
@@ -33,6 +36,15 @@ public class WaitInputNode : ActionNode
                 Vector3 pos = tile.transform.position;
                 StageManager.Instance.ShowHiglight(pos);
             }
+        }
+    }
+
+    public override bool Evaluate(Entity entity)
+    {
+        if (!mIsHighlighted) 
+        {
+            SetHighlight(entity);
+            mIsHighlighted = true;
         }
 
         //클릭한 정보 받아오기
@@ -46,12 +58,13 @@ public class WaitInputNode : ActionNode
             if (Physics.Raycast(ray, out hit))
             {
                 if (hit.collider.gameObject.TryGetComponent(out TileBase tile)
-                    && walkableTiles.Contains(tile.GetPosition()) )
+                    && mWalkable.Contains(tile.GetPosition()) )
                 {
                     mCurrSelectedTile = tile;
                     mIsSelected = true;
 
                     StageManager.Instance.ClearHighlights();
+                    mIsHighlighted = false;
                 }
                 else
                 {
@@ -71,15 +84,28 @@ public class WaitInputNode : ActionNode
 public class MoveNode : ActionNode 
 {
     private Vector3Int mTargetPos;
+    private bool mIsCalculated = false;
+    private List<Vector3Int> mPath = new List<Vector3Int>();
+
     public MoveNode(Vector3Int targetPos) { this.mTargetPos = targetPos; }
-    public override bool Evaluate(Entity entity)
+
+    private void CalculatePath(Entity entity) 
     {
         //플레이어가 서있는 타일 기준
         Vector3Int posData = new Vector3Int(entity.GetPosition().x, entity.GetPosition().y - 1, entity.GetPosition().z);
-        var path = AStarPathFinder.FindPath(posData, mTargetPos, StageManager.Instance.GetWalkableTiles(), entity.GetUnitData().unitAP);
-        if (path != null) 
+        mPath = AStarPathFinder.FindPath(posData, mTargetPos, StageManager.Instance.GetWalkableTiles(), entity.GetUnitData().unitAP);
+    }
+    public override bool Evaluate(Entity entity)
+    {
+        if (!mIsCalculated) 
         {
-            entity.Move(path);
+            CalculatePath(entity);
+            mIsCalculated = true;
+        }
+
+        if (mPath != null && mPath.Count > 0) 
+        {
+            entity.Move(mPath);
             return true;
         }
         return false;
@@ -135,9 +161,6 @@ public class TargetSelectNode : ActionNode
     private SkillSO mSelectedSkill;
     private bool mIsSelected = false;
 
-    private List<Entity> mHighlights = new List<Entity>();
-    private Entity mHighlightPrefab = StageManager.Instance.highlightPrefab;
-
     public TargetSelectNode(SkillSO skillData) 
     {
         mSelectedSkill = skillData;
@@ -148,23 +171,20 @@ public class TargetSelectNode : ActionNode
     public override bool Evaluate(Entity entity) 
     {
         //스킬 사용 가능한 대상 표시
-        if (mHighlights.Count == 0) 
+        List<Entity> targets = new List<Entity>();
+        switch (mSelectedSkill.targetType)
         {
-            List<Entity> targets = new List<Entity>();
-            switch (mSelectedSkill.targetType) 
-            {
-                case EEntityType.Enemy:
-                    targets.AddRange(StageManager.Instance.GetEnemyUnits());
-                    break;
-                case EEntityType.PlayerUnit:
-                    targets.AddRange(StageManager.Instance.GetPlayerUnits());
-                    break;
-            }
+            case EEntityType.Enemy:
+                targets.AddRange(StageManager.Instance.GetEnemyUnits());
+                break;
+            case EEntityType.PlayerUnit:
+                targets.AddRange(StageManager.Instance.GetPlayerUnits());
+                break;
+        }
 
-            foreach (var target in targets) 
-            {
-                StageManager.Instance.ShowHiglight(target.gameObject.transform.position);
-            }
+        foreach (var target in targets)
+        {
+            StageManager.Instance.ShowHiglight(target.gameObject.transform.position);
         }
 
         //대상 선택

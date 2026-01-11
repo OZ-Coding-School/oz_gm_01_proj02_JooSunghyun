@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class EnemyBase : Entity, IDamageable
+public class EnemyBase : Entity, IDamageable, ICameraChaseable
 {
     public void TakeDamage(float damage)
     {

@@ -19,3 +19,8 @@ public interface ISkillAction
 {
     public void SkillAction(Entity caster, Entity target);
 }
+
+public interface ICameraChaseable 
+{
+
+}
