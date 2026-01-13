@@ -13,13 +13,23 @@ public class StageManager : MonoBehaviour
 
     private List<Entity> mPlayerUnits;
     private List<Entity> mEnemyUnits;
+    private List<Entity> mNeutralUnits;
     private List<Entity> mActiveHighLIghs = new List<Entity>();
+
+    private int mCurrStageLevel = 1;
 
     private void Awake()
     {
         Instance = this;
     }
-
+    private void OnEnable()
+    {
+        Events.OnEntityDied += HandleEntityDeath;
+    }
+    private void OnDisable()
+    {
+        Events.OnEntityDied -= HandleEntityDeath;
+    }
     private void Start()
     {
         foreach (var tile in GameManager.Instance.tileDataBase.entries)
@@ -37,8 +47,6 @@ public class StageManager : MonoBehaviour
 
         InitializeStage();
     }
-
-
     public void SetStage(StageDataSO stageData) 
     {
         if (stageData == null) return;
@@ -46,12 +54,41 @@ public class StageManager : MonoBehaviour
 
         InitializeStage();
     }
-
     public void InitializeStage() 
     {
+        ClearStage();
         GenerateBase();
         GenerateMap();
         SpawnEntities();
+    }
+    public void LoadNextStage() 
+    {
+        StageDataGenerator generator = new StageDataGenerator();
+        StageDataSO nextStage = generator.GenerateStageData(mCurrStageLevel);
+
+        SetStage(nextStage);
+        mCurrStageLevel++;
+    }
+    private void HandleEntityDeath(Entity entity) 
+    {
+        RemoveEntity(entity);
+    }
+    public void RemoveEntity(Entity entity) 
+    {
+        if (entity == null) return;
+        switch (entity.GetUnitData().unitType) 
+        {
+            case EEntityType.PlayerUnit:
+                mPlayerUnits.Remove(entity); 
+                break;
+            case EEntityType.Enemy:
+                mEnemyUnits.Remove(entity);
+                break;
+            case EEntityType.Neutral:
+                mNeutralUnits.Remove(entity);
+                break;
+        }
+        PoolManager.Instance.ReturnPool(entity);
     }
 
     #region StageGenerate
@@ -101,6 +138,7 @@ public class StageManager : MonoBehaviour
     {
         mPlayerUnits = new List<Entity>();
         mEnemyUnits = new List<Entity>();
+        mNeutralUnits = new List<Entity>();
 
         foreach (var entity in mCurrStageDataSO.entities) 
         {
@@ -115,6 +153,7 @@ public class StageManager : MonoBehaviour
             {
                 case EEntityType.Neutral:
                     newEntity.tag = "Neutral";
+                    mNeutralUnits.Add(newEntity);
                     break;
                 case EEntityType.PlayerUnit:
                     newEntity.tag = "Player";
@@ -137,7 +176,6 @@ public class StageManager : MonoBehaviour
         highlight.gameObject.SetActive(true);
         mActiveHighLIghs.Add(highlight);
     }
-
     public void ClearHighlights() 
     {
         foreach (var hl in mActiveHighLIghs) 
@@ -154,7 +192,6 @@ public class StageManager : MonoBehaviour
         mTiles.TryGetValue(pos, out var tile);
         return tile;
     }
-
     public TileBase GetTopTileAt(int x, int z) 
     {
         TileBase top = null;
@@ -178,7 +215,6 @@ public class StageManager : MonoBehaviour
         }
         return top;
     }
-
     public HashSet<Vector3Int> GetWalkableTiles()
     {
         var walkable = new HashSet<Vector3Int>();
@@ -191,12 +227,10 @@ public class StageManager : MonoBehaviour
         }
         return walkable;
     }
-
     public List<Entity> GetPlayerUnits() { return mPlayerUnits; }
     public List<Entity> GetEnemyUnits() { return mEnemyUnits; }
     #endregion
-    //배틀 매니저에게 스테이지 생성완료 알려주기 
-
+    
     //배틀 끝나면 스테이지 청소(리턴 풀 등...)
     private void ClearStage()
     {
@@ -218,6 +252,13 @@ public class StageManager : MonoBehaviour
             foreach (var kv in mEnemyUnits)
                 PoolManager.Instance.ReturnPool(kv);
             mEnemyUnits.Clear();
+        }
+
+        if (mPlayerUnits != null)
+        {
+            foreach (var kv in mNeutralUnits)
+                PoolManager.Instance.ReturnPool(kv);
+            mNeutralUnits.Clear();
         }
     }
 }

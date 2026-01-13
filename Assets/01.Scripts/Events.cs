@@ -25,9 +25,17 @@ public static class Events
     public static event Action<List<SkillSO>> OnSkillUIUpdate;
     //턴 안내문구
     public static event Action<string> OnTurnInfoUpdate;
-    public static event Action OnTurnSkip;
-    public static event Action<int> OnAPUpdate;
+    //실린더 창 띄우기
+    public static event Action OnOpenCylinderUI;
 
+    public static event Action OnTurnSkip;
+
+    //엔티티 AP변동
+    public static event Action<int> OnAPUpdate;
+    //엔티티 사망
+    public static event Action<Entity> OnEntityDied;
+    //실린더 돌리기
+    public static Action<EBulletType> OnCylinderSpin;
 
     public static void RaiseTurnStart(Entity entity) => OnTurnStart?.Invoke(entity);
     public static void RaiseTurnEnd(Entity entity) => OnTurnEnd?.Invoke(entity);
@@ -41,10 +49,17 @@ public static class Events
 
     public static void RaiseDamageDealt(float damage, Entity entity, Entity target) => OnDamageDealt?.Invoke(damage, entity, target);
 
+    //UI 관련
     public static void RaiseSkillSelected(int skillIndex) => OnSkillSelected?.Invoke(skillIndex);
     public static void RaiseSkillUIUpdate(List<SkillSO> skills) => OnSkillUIUpdate?.Invoke(skills);
     public static void RaiseTurnInfoUpdate(string info) => OnTurnInfoUpdate?.Invoke(info);
+    public static void RaiseOpenCylinderUI() => OnOpenCylinderUI?.Invoke();
+
     public static void RaiseTurnSkip() => OnTurnSkip?.Invoke();
+
+    //엔티티 관련
     public static void RaiseAPUpdate(int ap) => OnAPUpdate?.Invoke(ap);
+    public static void RaiseEntityDied(Entity entity) => OnEntityDied?.Invoke(entity);
+    public static void RaiseCylinderSpin(EBulletType bullet) => OnCylinderSpin?.Invoke(bullet);
 }
 

@@ -17,6 +17,8 @@ public class Entity : MonoBehaviour
     protected HealthBar mHealthBar;
 
     public int bonusAP = 0;
+    public float tempAttackMultiplier = 1;
+    public float tempDefenseMultiplier = 1;
 
     private TileBase mMyTile;
     //데이터 받아오기
@@ -105,6 +107,11 @@ public class Entity : MonoBehaviour
 
     }
 
+    public void ResetTempMultiplier()
+    {
+        tempAttackMultiplier = 1;
+        tempDefenseMultiplier = 1;
+    }
 
     #region Helper
     public Vector3Int GetPosition()

@@ -8,12 +8,16 @@ public class GameManager : MonoBehaviour
     public TileDataBaseSO tileDataBase;
     public EntityDataBaseSO entityDataBase;
 
+    public RevolverSylinder revolverCylinder;
+
     private void Awake()
     {
         if (Instance == null)
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
+
+            revolverCylinder = new RevolverSylinder();
         }
         else
         {

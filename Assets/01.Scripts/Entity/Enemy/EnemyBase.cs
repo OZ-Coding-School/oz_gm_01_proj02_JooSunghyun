@@ -8,6 +8,7 @@ public class EnemyBase : Entity, IDamageable, ICameraChaseable
         currUnitHP = Mathf.Clamp(currUnitHP - damage, 0, GetUnitData().unitHP);
         mHealthBar.SetHealth(currUnitHP);
         Events.RaiseDamageDealt(damage, caster, this);
+        if (currUnitHP <= 0) { Death(); }
     }
     public void Heal(float healAmount)
     {
@@ -16,6 +17,6 @@ public class EnemyBase : Entity, IDamageable, ICameraChaseable
     }
     public void Death()
     {
-
+        Events.RaiseEntityDied(this);
     }
 }
