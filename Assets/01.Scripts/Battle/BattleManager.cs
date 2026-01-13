@@ -8,7 +8,6 @@ public class BattleManager : MonoBehaviour
     private Queue<Entity> mTurnOrder = new Queue<Entity>();
     private TurnStateMachine mTurnStateMachine;
 
-
     private void Awake()
     {
         Instance = this;
@@ -27,7 +26,7 @@ public class BattleManager : MonoBehaviour
 
     private void Update()
     {
-        mTurnStateMachine.Update();
+        mTurnStateMachine?.Update();
     }
 
     public void SetUp() 
@@ -45,6 +44,13 @@ public class BattleManager : MonoBehaviour
         if (mTurnOrder.Count == 0) { return; }
 
         Entity nextEntity = mTurnOrder.Dequeue();
+        Events.RaiseSkillUIUpdate(nextEntity.GetUnitData().skills);
+
+        if (nextEntity == null || nextEntity.currUnitHP <= 0) 
+        {
+            StartNextTurn();
+            return;
+        }
 
         if (nextEntity.GetUnitData().unitType == EEntityType.PlayerUnit)
         {
@@ -58,24 +64,29 @@ public class BattleManager : MonoBehaviour
         }
 
         mTurnStateMachine.StartTurn();
-
         mTurnOrder.Enqueue(nextEntity);
     }
 
     public void EndCurrentTurn() 
     {
-        StartNextTurn();
+        if (!IsBattleEnd()) 
+        {
+            mTurnStateMachine.Dispose();
+            BroadCastTurnInfo("End Turn");
+            StartNextTurn();
+        }
+        else
+            BroadCastTurnInfo("Battle End!");
     }
 
     public void BroadCastTurnInfo(string info) 
     {
-        BattleEvents.RaiseTurnInfoUpdate(info);
+        Events.RaiseTurnInfoUpdate(info);
     }
     public void BroadCastSkillUIInfo(List<SkillSO> skills) 
     {
-        BattleEvents.RaiseSkillUIUpdate(skills);
+        Events.RaiseSkillUIUpdate(skills);
     }
-
     private bool IsBattleEnd() 
     {
         if (StageManager.Instance.GetPlayerUnits().Count == 0 ||
@@ -83,10 +94,8 @@ public class BattleManager : MonoBehaviour
         {
             return true;
         }
-
         return false;
     }
-
 
     //승리조건 관리
     //전투가 끝나면 게임 매니저에 전달

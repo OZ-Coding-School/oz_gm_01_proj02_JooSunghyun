@@ -9,9 +9,7 @@ public class EntityDataSO : ScriptableObject
     public Entity unitPrefab;
     public int unitId;
     public int unitAP;  //행동력 > 이동 한칸에 AP1 소모
-    public int unitAttackRange;
     public float unitHP;
-    public float unitMP;
     public float unitAttack;
     public float unitDefense;
 

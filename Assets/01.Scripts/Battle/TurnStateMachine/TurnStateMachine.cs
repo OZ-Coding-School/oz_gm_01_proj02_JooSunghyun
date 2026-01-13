@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 
-public abstract class TurnStateMachine
+public abstract class TurnStateMachine : IDisposable
 {
-    protected Queue<ActionNode> mActionQueue = new Queue<ActionNode>();
+    protected Queue<BTNode> mActionQueue = new Queue<BTNode>();
     protected Entity mCurrentEntity;
     public bool IsFinished => mActionQueue.Count == 0;
 
@@ -17,7 +17,7 @@ public abstract class TurnStateMachine
     {
         if (mActionQueue.Count > 0) 
         {
-            ActionNode currentNode = mActionQueue.Peek();
+            BTNode currentNode = mActionQueue.Peek();
 
             if (currentNode.Evaluate(mCurrentEntity)) 
             {
@@ -25,4 +25,16 @@ public abstract class TurnStateMachine
             }
         }
     }
+
+    protected bool HasEnoughCost(Entity entity, SkillSO skill)
+    {
+        if (entity.TryGetComponent(out Entity e)) 
+        {
+            if (e.currUnitAP >= skill.skillCost) return true;
+            else return false;
+        }
+        return false;
+    }
+
+    public virtual void Dispose() { }
 }
