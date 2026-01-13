@@ -12,7 +12,14 @@ public class BattleManager : MonoBehaviour
     {
         Instance = this;
     }
-
+    private void OnEnable()
+    {
+        Events.OnEntityDied += CheckBattleEnd;
+    }
+    private void OnDisable()
+    {
+        Events.OnEntityDied -= CheckBattleEnd;
+    }
     private void Start()
     {
         InitializeBattle();
@@ -31,6 +38,8 @@ public class BattleManager : MonoBehaviour
 
     public void SetUp() 
     {
+        mTurnOrder.Clear();
+
         var players = StageManager.Instance.GetPlayerUnits();
         var enemies = StageManager.Instance.GetEnemyUnits();
 
@@ -44,13 +53,14 @@ public class BattleManager : MonoBehaviour
         if (mTurnOrder.Count == 0) { return; }
 
         Entity nextEntity = mTurnOrder.Dequeue();
-        Events.RaiseSkillUIUpdate(nextEntity.GetUnitData().skills);
 
         if (nextEntity == null || nextEntity.currUnitHP <= 0) 
         {
             StartNextTurn();
             return;
         }
+
+        Events.RaiseSkillUIUpdate(nextEntity.GetUnitData().skills);
 
         if (nextEntity.GetUnitData().unitType == EEntityType.PlayerUnit)
         {
@@ -69,14 +79,31 @@ public class BattleManager : MonoBehaviour
 
     public void EndCurrentTurn() 
     {
-        if (!IsBattleEnd()) 
+        mTurnStateMachine.Dispose();
+        BroadCastTurnInfo("End Turn");
+        if (IsBattleEnd())
         {
-            mTurnStateMachine.Dispose();
-            BroadCastTurnInfo("End Turn");
+            EndBattle();
+        }
+        else 
+        {
             StartNextTurn();
         }
-        else
-            BroadCastTurnInfo("Battle End!");
+    }
+
+    private void EndBattle() 
+    {
+        BroadCastTurnInfo("Battle End!");
+
+        if (StageManager.Instance.GetEnemyUnits().Count == 0)
+        {
+            //铰府
+            StageManager.Instance.LoadNextStage();
+        }
+        else if (StageManager.Instance.GetPlayerUnits().Count == 0) 
+        {
+            //菩硅贸府
+        }
     }
 
     public void BroadCastTurnInfo(string info) 
@@ -95,6 +122,10 @@ public class BattleManager : MonoBehaviour
             return true;
         }
         return false;
+    }
+    private void CheckBattleEnd(Entity entity) 
+    {
+        if (IsBattleEnd()) { EndBattle(); }
     }
 
     //铰府炼扒 包府

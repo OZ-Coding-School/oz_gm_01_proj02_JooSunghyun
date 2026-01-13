@@ -18,7 +18,7 @@ public class EnemyTurnStateMachine : TurnStateMachine
         //이벤트 발행
         BattleManager.Instance.BroadCastTurnInfo("Enemy Turn Start");
         BattleManager.Instance.BroadCastSkillUIInfo(mCurrEntity.GetUnitData().skills);
-
+        Events.RaiseAPUpdate(mCurrEntity.currUnitAP);
         BattleManager.Instance.StartCoroutine(EnemyActionCo());
     }
 

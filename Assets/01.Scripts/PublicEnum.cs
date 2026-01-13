@@ -20,15 +20,12 @@ public enum ESkillType
     NormalHeal,
 }
 
-public enum PlayerState 
+
+public enum EBulletType 
 {
-    Idle,
-    SkillSelect,
-    TargetSelect,
-    Attack,
-    MoveSelect,
-    Move,
-    EndTurn
+    Normal=0,
+    Critical=1,
+    Heal=2
 }
 
 [System.Serializable]

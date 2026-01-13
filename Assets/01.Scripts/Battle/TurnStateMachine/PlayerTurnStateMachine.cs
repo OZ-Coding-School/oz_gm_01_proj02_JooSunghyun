@@ -6,13 +6,19 @@ public class PlayerTurnStateMachine : TurnStateMachine
     private Entity mPlayerEntity;
     private SkillSO mSelectedSkill;
     private Entity mSelectedTarget;
+    private EBulletType mSelectedBullet;
+    private RevolverSylinder mCylinder;
+    private BulletEffectHandler mBulletHandler;
 
     public PlayerTurnStateMachine(Entity entity) : base(entity)
     {
         mPlayerEntity = entity;
+        mCylinder = GameManager.Instance.revolverCylinder;
+        mBulletHandler = new BulletEffectHandler();
 
         Events.OnMoveSelected += HandleMoveSelected;
         Events.OnSkillSelected += HandleSkillSelected;
+        Events.OnCylinderSpin += HandleCylinderSpin;
         Events.OnTurnSkip += HandleTurnSkip;
     }
 
@@ -51,6 +57,7 @@ public class PlayerTurnStateMachine : TurnStateMachine
                     mSelectedTarget = targetNode.GetSelectedTarget();
                     if (mSelectedSkill != null && mSelectedTarget != null)
                     {
+                        mBulletHandler.ApplyEffect(mSelectedBullet, mPlayerEntity, mSelectedTarget);
                         mActionQueue.Enqueue(new AttackNode(mSelectedSkill, mSelectedTarget));
                     }
                     else
@@ -70,6 +77,12 @@ public class PlayerTurnStateMachine : TurnStateMachine
         mActionQueue.Enqueue(new WaitInputNode(mPlayerEntity));
         BattleManager.Instance.BroadCastTurnInfo("Select tile to move");
     }
+    private void HandleCylinderSpin(EBulletType t) 
+    {
+        mSelectedBullet = t;
+        mActionQueue.Enqueue(new TargetSelectNode(mSelectedSkill));
+        BattleManager.Instance.BroadCastTurnInfo("Select target to use");
+    }
     private void HandleSkillSelected(int skillIndex)
     {
         var skills = mPlayerEntity.GetUnitData().skills;
@@ -79,8 +92,12 @@ public class PlayerTurnStateMachine : TurnStateMachine
             if (mPlayerEntity.currUnitAP >= selectedSkill.skillCost)
             {
                 mSelectedSkill = selectedSkill;
-                mActionQueue.Enqueue(new TargetSelectNode(selectedSkill));
-                BattleManager.Instance.BroadCastTurnInfo("Select skill to use");
+                if (mSelectedSkill.targetType == EEntityType.Enemy) 
+                {
+                    Events.RaiseOpenCylinderUI();
+
+                    mActionQueue.Enqueue(new WaitNode());
+                }
             }
             else 
             {

@@ -218,6 +218,7 @@ public class AttackNode : BTNode
             skillAction.SkillAction(entity, mTarget);
 
             entity.currUnitAP -= mSkill.skillCost;
+            entity.ResetTempMultiplier();//임시버프 꺼주기
             StageManager.Instance.ClearHighlights();
 
             Events.RaiseSkillUsed(mSkill, mTarget);
