@@ -17,7 +17,18 @@ public enum ETileType
 public enum ESkillType 
 {
     NormalAttack,
-    NormalHeal
+    NormalHeal,
+}
+
+public enum PlayerState 
+{
+    Idle,
+    SkillSelect,
+    TargetSelect,
+    Attack,
+    MoveSelect,
+    Move,
+    EndTurn
 }
 
 [System.Serializable]

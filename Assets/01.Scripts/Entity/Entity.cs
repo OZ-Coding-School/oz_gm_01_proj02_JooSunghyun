@@ -9,11 +9,10 @@ public class Entity : MonoBehaviour
     private int mPosZ;
     private float mMoveSpeed = 5f;
 
-    protected float mUnitHP;
-    protected float mUnitMP;
-    protected float mUnitAttack;
-    protected float mUnitDefense;
-    protected int mUnitAttackRange;
+    public float currUnitHP;
+    public float currUnitAttack;
+    public float currUnitDefense;
+    public int currUnitAP;
 
     protected HealthBar mHealthBar;
 
@@ -30,32 +29,21 @@ public class Entity : MonoBehaviour
         mPosY = y;
         mPosZ = z;
 
-        mUnitAttack = data.unitAttack;
-        mUnitHP = data.unitHP;
-        mUnitMP = data.unitMP;
-        mUnitAttack = data.unitAttack;
-        mUnitDefense = data.unitDefense;
-        mUnitAttackRange = data.unitAttackRange;
+        currUnitHP = data.unitHP;
+        currUnitAttack = data.unitAttack;
+        currUnitDefense = data.unitDefense;
+        currUnitAP = data.unitAP;
 
         mHealthBar = GetComponentInChildren<HealthBar>();
         if (mHealthBar != null) 
         {
             mHealthBar.SetMaxHealth(GetUnitData().unitHP);
-            mHealthBar.SetHealth(mUnitHP);
+            mHealthBar.SetHealth(currUnitHP);
         }
 
         OccupyTile();
     }
 
-    public Vector3Int GetPosition()
-    {
-        return new Vector3Int(mPosX, mPosY, mPosZ);
-    }
-
-    public Vector2Int GetPosition2Int()
-    {
-        return new Vector2Int(mPosX, mPosZ);
-    }
     //엔티티는 타일을 점령할 수 있음
     public void OccupyTile() 
     {
@@ -73,12 +61,6 @@ public class Entity : MonoBehaviour
             mMyTile = tile;
         }    
     }
-
-    public EntityDataSO GetUnitData() 
-    {
-        return unitData;
-    }
-
     //이동 알고리즘
     public void Move(List<Vector3Int> path) 
     {
@@ -94,8 +76,17 @@ public class Entity : MonoBehaviour
                 grid.x * PublicConst.TileWidth, 
                 (grid.y + 1) * PublicConst.TileHeights + 0.1f, 
                 grid.z * PublicConst.TileWidth);
+
             while (Vector3.Distance(transform.position, targetPos) > 0.1f) 
             {
+                //이동방향으로 돌리기
+                Vector3 direction = (targetPos - transform.position).normalized; //방향만 구하려고 정규화
+                if (direction != Vector3.zero)
+                {
+                    Quaternion rotation = Quaternion.LookRotation(direction);
+                    transform.rotation = Quaternion.Slerp(transform.rotation, rotation, Time.deltaTime * 10f);
+                }
+                //이동
                 transform.position = Vector3.MoveTowards(transform.position, targetPos, mMoveSpeed * Time.deltaTime);
                 yield return null;
             }
@@ -109,4 +100,24 @@ public class Entity : MonoBehaviour
     }
 
     //공격 알고리즘
+    public void UseSkill(SkillSO skill, Entity target) 
+    {
+
+    }
+
+
+    #region Helper
+    public Vector3Int GetPosition()
+    {
+        return new Vector3Int(mPosX, mPosY, mPosZ);
+    }
+    public Vector2Int GetPosition2Int()
+    {
+        return new Vector2Int(mPosX, mPosZ);
+    }
+    public EntityDataSO GetUnitData()
+    {
+        return unitData;
+    }
+    #endregion
 }

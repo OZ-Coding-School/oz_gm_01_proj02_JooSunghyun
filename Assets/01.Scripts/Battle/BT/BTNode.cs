@@ -1,30 +1,35 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using static UnityEngine.EventSystems.EventTrigger;
 
-public abstract class ActionNode 
+public abstract class BTNode 
 {
     public abstract bool Evaluate(Entity entity);
 }
-
-public class WaitInputNode : ActionNode 
+public abstract class InputNode : BTNode
+{
+    protected bool mIsCompleted = false;
+    public bool IsCompleted => mIsCompleted;
+    public override bool Evaluate(Entity entity)
+    {
+        return mIsCompleted;
+    }
+}
+//이동타일 입력 대기 노드
+public class WaitInputNode : InputNode 
 {
     private Entity mCurrSelectedEntity;
     private TileBase mCurrSelectedTile;
-    private bool mIsSelected = false;
     private bool mIsHighlighted = false;
     private HashSet<Vector3Int> mWalkable = new HashSet<Vector3Int>();
-
     public WaitInputNode(Entity selectedEntity) { this.mCurrSelectedEntity = selectedEntity; }
-
     private void SetHighlight(Entity entity) 
     {
         //플레이어가 서있는 타일 기준
         Vector3Int posData = new Vector3Int(entity.GetPosition().x, entity.GetPosition().y - 1, entity.GetPosition().z);
         //이동 가능한 타일들 표시
         HashSet<Vector3Int> walkableTiles
-            = AStarPathFinder.GetReachableTiles(posData, entity.GetUnitData().unitAP + entity.bonusAP, StageManager.Instance.GetWalkableTiles());
+            = AStarPathFinder.GetReachableTiles(posData, entity.currUnitAP + entity.bonusAP, StageManager.Instance.GetWalkableTiles());
         mWalkable = walkableTiles;
 
         //여기서 이펙트용 오브젝트들 표시해줘야함
@@ -38,7 +43,6 @@ public class WaitInputNode : ActionNode
             }
         }
     }
-
     public override bool Evaluate(Entity entity)
     {
         if (!mIsHighlighted) 
@@ -46,12 +50,10 @@ public class WaitInputNode : ActionNode
             SetHighlight(entity);
             mIsHighlighted = true;
         }
-
         //클릭한 정보 받아오기
         if (Mouse.current.leftButton.wasPressedThisFrame)
         {
             Vector2 mousePos = Mouse.current.position.ReadValue();
-
             Ray ray = Camera.main.ScreenPointToRay(mousePos);
             RaycastHit hit;
 
@@ -61,39 +63,31 @@ public class WaitInputNode : ActionNode
                     && mWalkable.Contains(tile.GetPosition()) )
                 {
                     mCurrSelectedTile = tile;
-                    mIsSelected = true;
+                    mIsCompleted = true;
 
                     StageManager.Instance.ClearHighlights();
                     mIsHighlighted = false;
                 }
-                else
-                {
-                    //이동불가
-                }
             }
         }
-        return mIsSelected;
+        return mIsCompleted;
     }
-
-    public TileBase GetSelectedTile() 
-    {
-        return mCurrSelectedTile;
-    }
+    public TileBase GetSelectedTile() => mCurrSelectedTile;
 }
-
-public class MoveNode : ActionNode 
+//이동 노드
+public class MoveNode : BTNode
 {
     private Vector3Int mTargetPos;
     private bool mIsCalculated = false;
+    private bool mIsStarted = false;
+    private bool mIsCompleted = false;
     private List<Vector3Int> mPath = new List<Vector3Int>();
-
     public MoveNode(Vector3Int targetPos) { this.mTargetPos = targetPos; }
-
     private void CalculatePath(Entity entity) 
     {
         //플레이어가 서있는 타일 기준
         Vector3Int posData = new Vector3Int(entity.GetPosition().x, entity.GetPosition().y - 1, entity.GetPosition().z);
-        mPath = AStarPathFinder.FindPath(posData, mTargetPos, StageManager.Instance.GetWalkableTiles(), entity.GetUnitData().unitAP);
+        mPath = AStarPathFinder.FindPath(posData, mTargetPos, StageManager.Instance.GetWalkableTiles(), entity.currUnitAP);
     }
     public override bool Evaluate(Entity entity)
     {
@@ -103,73 +97,43 @@ public class MoveNode : ActionNode
             mIsCalculated = true;
         }
 
-        if (mPath != null && mPath.Count > 0) 
+        if (!mIsStarted && mPath != null && mPath.Count > 0)
         {
+            BattleManager.Instance.BroadCastTurnInfo("Moving...");
             entity.Move(mPath);
-            return true;
+            mIsStarted = true;
         }
-        return false;
+
+        if (mIsStarted && !mIsCompleted)
+        {            
+            if (entity.GetPosition() == mTargetPos + new Vector3Int(0, 1, 0))
+            {
+                BattleManager.Instance.BroadCastTurnInfo("Move Complete");
+                entity.currUnitAP -= mPath.Count - 1;//시작칸 코스트 들어가는거 빼기
+                Events.RaiseAPUpdate(entity.currUnitAP);
+
+                Events.RaiseMove(entity, mPath.Count);
+                mIsCompleted = true;
+            }       
+        }
+        return mIsCompleted;
     }
 }
-
-public class SkillSelectNode : ActionNode ,IDisposable
-{
-    private SkillSO mSelectedSkill;
-    private bool mIsSelected = false;
-    private Entity mPlayerUnit;
-
-    private bool mIsDisposed = false;
-
-    public SkillSelectNode(Entity entity) 
-    {
-        mPlayerUnit = entity;
-        //이벤트 구독
-        BattleEvents.OnSkillSelected += HandleSkillSelected;
-    }
-
-    private void HandleSkillSelected(int skillIndex) 
-    {
-        var skills = mPlayerUnit.GetUnitData().skills;
-        if (mPlayerUnit.GetUnitData().skills.Count > skillIndex)
-        {
-            mSelectedSkill = skills[skillIndex];
-            mIsSelected = true;
-        }
-    }
-
-    public SkillSO GetSelectedSkill() { return mSelectedSkill; }
-
-    public override bool Evaluate(Entity entity) 
-    {
-        return mIsSelected;
-    }
-
-    public void Dispose()
-    {
-        if (!mIsDisposed) 
-        {
-            //이벤트 해제
-            BattleEvents.OnSkillSelected -= HandleSkillSelected;
-            mIsDisposed = true;
-        }
-    }
-}
-
-public class TargetSelectNode : ActionNode 
+//타겟 선택 노드
+public class TargetSelectNode : InputNode 
 {
     private Entity mSelectedTarget;
     private SkillSO mSelectedSkill;
-    private bool mIsSelected = false;
-
+    private bool mIsCalcullated = false;
+    private List<Entity> mValidTargets = new List<Entity>();
     public TargetSelectNode(SkillSO skillData) 
     {
         mSelectedSkill = skillData;
     }
-
-    public Entity GetSelectedTarget() { return mSelectedTarget; }
-
-    public override bool Evaluate(Entity entity) 
+    private void CheckRange(Entity entity) 
     {
+        mValidTargets.Clear();
+        Vector3Int casterPos = entity.GetPosition() + new Vector3Int(0, -1, 0);
         //스킬 사용 가능한 대상 표시
         List<Entity> targets = new List<Entity>();
         switch (mSelectedSkill.targetType)
@@ -181,14 +145,35 @@ public class TargetSelectNode : ActionNode
                 targets.AddRange(StageManager.Instance.GetPlayerUnits());
                 break;
         }
-
+        //사거리 계산
         foreach (var target in targets)
         {
-            StageManager.Instance.ShowHiglight(target.gameObject.transform.position);
+            Vector3Int targetPos = target.GetPosition() + new Vector3Int(0, -1, 0);
+            int dist = Mathf.Abs(casterPos.x - targetPos.x) + Mathf.Abs(casterPos.y - targetPos.y);
+
+            if (dist <= mSelectedSkill.skillRange)
+            {
+                mValidTargets.Add(target);
+                StageManager.Instance.ShowHiglight(target.gameObject.transform.position);
+            }
+        }
+    }
+    public override bool Evaluate(Entity entity) 
+    {
+        if (!mIsCalcullated) 
+        {
+            CheckRange(entity);
+            mIsCalcullated = true;
         }
 
+        if (mValidTargets.Count == 0)
+        {
+            mSelectedTarget = null;
+            mIsCompleted = false;
+            return false;
+        }
         //대상 선택
-        if (!mIsSelected && Mouse.current.leftButton.wasPressedThisFrame) 
+        if (!mIsCompleted && Mouse.current.leftButton.wasPressedThisFrame) 
         {
             Vector2 mousePos = Mouse.current.position.ReadValue();
             Ray ray = Camera.main.ScreenPointToRay(mousePos);
@@ -197,52 +182,60 @@ public class TargetSelectNode : ActionNode
             if (Physics.Raycast(ray, out hit)) 
             {
                 if (hit.collider.gameObject.TryGetComponent(out Entity targetEntity)
-                    && targetEntity.GetUnitData().unitType == mSelectedSkill.targetType) 
+                    && targetEntity.GetUnitData().unitType == mSelectedSkill.targetType
+                    && mValidTargets.Contains(targetEntity)) 
                 {
                     mSelectedTarget = targetEntity;
-                    mIsSelected = true;
+                    mIsCompleted = true;
 
                     //하이라이트 집어넣기
                     StageManager.Instance.ClearHighlights();
 
                     //선택한 애만 남겨두기
                     StageManager.Instance.ShowHiglight(mSelectedTarget.gameObject.transform.position);
+
+                    Events.RaiseTargetSelected(entity, mSelectedTarget);
                 }
             }
         }
-
-        return mIsSelected;
+        return mIsCompleted;
     }
+    public Entity GetSelectedTarget() => mSelectedTarget;
 }
-
-public class AttackNode : ActionNode 
+//공격 실행 노드
+public class AttackNode : BTNode
 {
     private SkillSO mSkill;
     private Entity mTarget;
+    private bool mIsSkillUsed = false;
     public AttackNode(SkillSO skill, Entity target) { mSkill = skill; mTarget = target; }
-
     public override bool Evaluate(Entity entity) 
     {
+        if (mIsSkillUsed) return true;
         ISkillAction skillAction = SkillFactory.CreateSkill(mSkill);
-
         if (skillAction != null && mTarget != null) 
         {
             skillAction.SkillAction(entity, mTarget);
-            return true;
+
+            entity.currUnitAP -= mSkill.skillCost;
+            StageManager.Instance.ClearHighlights();
+
+            Events.RaiseSkillUsed(mSkill, mTarget);
         }
-        return false;
+        mIsSkillUsed = true;
+        return true;
     }
 }
-
-public class WaitNode : ActionNode 
+//대기 노드
+public class WaitNode : BTNode
 {
     public override bool Evaluate(Entity entity)
     {
         return true;
     }
 }
-
-public class EndTurnNode : ActionNode 
+//턴 종료 노드
+public class EndTurnNode : BTNode
 {
     public override bool Evaluate(Entity entity)
     {
