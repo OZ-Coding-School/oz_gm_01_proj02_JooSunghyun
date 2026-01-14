@@ -7,6 +7,7 @@ public class TileBase : MonoBehaviour
     private int mPosZ;
 
     private Entity owner;
+    private Renderer mTileRenderer;
 
     public bool isWalkable = true;
 
@@ -15,6 +16,8 @@ public class TileBase : MonoBehaviour
         mPosX = x;
         mPosY = y;
         mPosZ = z;
+
+        mTileRenderer = GetComponentInChildren<Renderer>();
     }
 
     public void SetOwner(Entity entity) 
@@ -28,6 +31,18 @@ public class TileBase : MonoBehaviour
         {
             isWalkable = false;
         }    
+    }
+
+    public void SetVisible(bool isVisible) 
+    {
+        if (isVisible)
+        {
+            mTileRenderer.material.color = Color.white;
+        }
+        else 
+        {
+           mTileRenderer.material.color = Color.black * 0.5f;
+        }
     }
 
     public Entity GetOwner() 

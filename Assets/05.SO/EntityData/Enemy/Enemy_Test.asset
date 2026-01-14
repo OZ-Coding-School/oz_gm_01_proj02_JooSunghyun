@@ -16,12 +16,11 @@ MonoBehaviour:
   unitType: 2
   unitPrefab: {fileID: 7931000729785644064, guid: 9fdbd97b0e77af243b57e49ac3971650, type: 3}
   unitId: 0
-  unitHP: 100
-  unitMP: 100
+  unitAP: 5
+  unitViewRange: 8
+  unitHP: 20
   unitAttack: 10
   unitDefense: 10
-  unitAP: 5
-  unitAttackRange: 1
   skills:
   - {fileID: 11400000, guid: 69059eb0ed8e2774d936b84f377fe8f0, type: 2}
   - {fileID: 11400000, guid: 1519f438fbc1e86479f279623855f238, type: 2}

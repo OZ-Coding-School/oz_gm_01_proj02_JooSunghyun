@@ -80,7 +80,7 @@ public class EnemyTurnStateMachine : TurnStateMachine
 
         foreach (var tile in reachableTiles) 
         {
-            int dist = Mathf.Abs(playerPos.x - tile.x) + Mathf.Abs(playerPos.z - tile.z);
+            int dist = AStarPathFinder.Heuristic(playerPos, tile);
             if (dist < minDist) 
             {
                 minDist = dist;

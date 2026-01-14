@@ -66,7 +66,7 @@ public class StageDataGenerator
                     entities.Add(new SpawnData
                     {
                         entityId = 0,
-                        entityType = EEntityType.Neutral,
+                        entityType = EEntityType.Enemy,
                         gridPos = new Vector2Int(x, z)
                     });
                 }
@@ -76,7 +76,7 @@ public class StageDataGenerator
                     entities.Add(new SpawnData
                     {
                         entityId = 1,
-                        entityType = EEntityType.Neutral,
+                        entityType = EEntityType.PlayerUnit,
                         gridPos = new Vector2Int(x, z)
                     });
                 }
@@ -88,7 +88,7 @@ public class StageDataGenerator
             entities.Add(new SpawnData
             {
                 entityId = 1,
-                entityType = EEntityType.Neutral,
+                entityType = EEntityType.PlayerUnit,
                 gridPos = new Vector2Int(9, 9)
             });
             mIsPlayerExist = true;

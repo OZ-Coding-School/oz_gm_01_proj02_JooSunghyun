@@ -13,6 +13,7 @@ public class Entity : MonoBehaviour
     public float currUnitAttack;
     public float currUnitDefense;
     public int currUnitAP;
+    public int currUnitViewRange;
 
     protected HealthBar mHealthBar;
 
@@ -35,6 +36,7 @@ public class Entity : MonoBehaviour
         currUnitAttack = data.unitAttack;
         currUnitDefense = data.unitDefense;
         currUnitAP = data.unitAP;
+        currUnitViewRange = data.unitViewRange;
 
         mHealthBar = GetComponentInChildren<HealthBar>();
         if (mHealthBar != null) 
@@ -98,6 +100,11 @@ public class Entity : MonoBehaviour
             mPosZ = grid.z;
 
             OccupyTile();
+
+            if (GetUnitData().unitType == EEntityType.PlayerUnit)
+            {
+                StageManager.Instance.UpdateVisibility(this, currUnitViewRange);
+            }
         }
     }
 

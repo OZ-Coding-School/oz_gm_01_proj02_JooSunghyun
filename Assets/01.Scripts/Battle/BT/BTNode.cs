@@ -91,6 +91,12 @@ public class MoveNode : BTNode
     }
     public override bool Evaluate(Entity entity)
     {
+        if (entity == null || !entity.gameObject.activeSelf) 
+        {
+            mIsCompleted = true;
+            return mIsCompleted;
+        }
+
         if (!mIsCalculated) 
         {
             CalculatePath(entity);
@@ -149,7 +155,7 @@ public class TargetSelectNode : InputNode
         foreach (var target in targets)
         {
             Vector3Int targetPos = target.GetPosition() + new Vector3Int(0, -1, 0);
-            int dist = Mathf.Abs(casterPos.x - targetPos.x) + Mathf.Abs(casterPos.y - targetPos.y);
+            int dist = AStarPathFinder.Heuristic(casterPos, targetPos);
 
             if (dist <= mSelectedSkill.skillRange)
             {
@@ -187,13 +193,10 @@ public class TargetSelectNode : InputNode
                 {
                     mSelectedTarget = targetEntity;
                     mIsCompleted = true;
-
                     //하이라이트 집어넣기
                     StageManager.Instance.ClearHighlights();
-
                     //선택한 애만 남겨두기
                     StageManager.Instance.ShowHiglight(mSelectedTarget.gameObject.transform.position);
-
                     Events.RaiseTargetSelected(entity, mSelectedTarget);
                 }
             }
@@ -211,6 +214,12 @@ public class AttackNode : BTNode
     public AttackNode(SkillSO skill, Entity target) { mSkill = skill; mTarget = target; }
     public override bool Evaluate(Entity entity) 
     {
+        if (entity == null || !entity.gameObject.activeSelf)
+        {
+            mIsSkillUsed = true;
+            return mIsSkillUsed;
+        }
+
         if (mIsSkillUsed) return true;
         ISkillAction skillAction = SkillFactory.CreateSkill(mSkill);
         if (skillAction != null && mTarget != null) 
