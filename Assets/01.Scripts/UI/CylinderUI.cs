@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 
 public class CylinderUI : MonoBehaviour, IDragHandler, IEndDragHandler
 {
@@ -12,10 +13,15 @@ public class CylinderUI : MonoBehaviour, IDragHandler, IEndDragHandler
     private float mRotationSpeed;
     private RevolverSylinder mCylinder;
 
+    public GameObject mEffectInfoPanel;
+    public TextMeshProUGUI mEffectTExt;
+
+    private WaitForSeconds mWaitForSeconds = new WaitForSeconds(0.9f);
     private void Awake()
     {
         Events.OnOpenCylinderUI += HandleOpenCylinderUI;
         gameObject.SetActive(false);
+        mEffectInfoPanel.SetActive(false);
     }
     private void OnDestroy()
     {
@@ -84,8 +90,29 @@ public class CylinderUI : MonoBehaviour, IDragHandler, IEndDragHandler
         int selectedIndex = GetTopSlotIndex();
         EBulletType selectedBullet = mCylinder.GetBullets()[selectedIndex];
 
+        mEffectInfoPanel.SetActive(true);
+        SetEffevtText(selectedBullet);
+        yield return mWaitForSeconds;
+
         Events.RaiseCylinderSpin(selectedBullet);
+        mEffectInfoPanel.SetActive(false);
         gameObject.SetActive(false);
+    }
+
+    private void SetEffevtText(EBulletType bullet) 
+    {
+        switch (bullet) 
+        {
+            case EBulletType.Normal:
+                mEffectTExt.text = "Normal Bullet";
+                break;
+            case EBulletType.Critical:
+                mEffectTExt.text = "Damage X 2";
+                break;
+            case EBulletType.Heal:
+                mEffectTExt.text = "HP +20";
+                break;
+        }
     }
 
     private int GetTopSlotIndex() 

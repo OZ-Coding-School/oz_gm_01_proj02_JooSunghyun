@@ -18,6 +18,8 @@ public class BattleSceneUI : MonoBehaviour
     public TextMeshProUGUI skillText_2;
     public TextMeshProUGUI skillText_3;
 
+    public TextMeshProUGUI stageInfoText;
+
     public TextMeshProUGUI turnInfoText;
     public TextMeshProUGUI apInfoText;
 
@@ -26,6 +28,7 @@ public class BattleSceneUI : MonoBehaviour
         Events.OnSkillUIUpdate += UpdateSkillUI;
         Events.OnTurnInfoUpdate += UpdateTurnInfo;
         Events.OnAPUpdate += UpdateAPInfo;
+        Events.OnStageChange += UpdateStageInfo;
 
         endTurnButton.onClick.RemoveAllListeners();
         endTurnButton.onClick.AddListener(() => Events.RaiseTurnSkip());
@@ -36,6 +39,7 @@ public class BattleSceneUI : MonoBehaviour
         Events.OnSkillUIUpdate -= UpdateSkillUI;
         Events.OnTurnInfoUpdate -= UpdateTurnInfo;
         Events.OnAPUpdate -= UpdateAPInfo;
+        Events.OnStageChange -= UpdateStageInfo;
     }
 
     private void UpdateSkillUI(List<SkillSO> skills)
@@ -75,5 +79,12 @@ public class BattleSceneUI : MonoBehaviour
     private void UpdateAPInfo(int ap) 
     {
         apInfoText.text = $"{ap}AP";
+    }
+
+    private void UpdateStageInfo(int stageLevel) 
+    {
+        int front = (stageLevel - 1) / 10 + 1;
+        int back = (stageLevel - 1) % 10 + 1;
+        stageInfoText.text = $"Stage {front} - {back}";
     }
 }

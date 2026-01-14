@@ -29,6 +29,8 @@ public static class Events
     public static event Action OnOpenCylinderUI;
 
     public static event Action OnTurnSkip;
+    //스테이지 변경
+    public static event Action<int> OnStageChange;
 
     //엔티티 AP변동
     public static event Action<int> OnAPUpdate;
@@ -56,6 +58,7 @@ public static class Events
     public static void RaiseOpenCylinderUI() => OnOpenCylinderUI?.Invoke();
 
     public static void RaiseTurnSkip() => OnTurnSkip?.Invoke();
+    public static void RaiseStageChange(int stageLevel) => OnStageChange?.Invoke(stageLevel);
 
     //엔티티 관련
     public static void RaiseAPUpdate(int ap) => OnAPUpdate?.Invoke(ap);

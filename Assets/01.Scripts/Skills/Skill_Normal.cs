@@ -11,7 +11,7 @@ public class Skill_NormalAttack : ISkillAction
     {
         if (target.TryGetComponent(out IDamageable damageable)) 
         {
-            mDamage = caster.GetUnitData().unitAttack;
+            mDamage = caster.currUnitAttack * caster.tempAttackMultiplier;
             damageable.TakeDamage(mDamage, caster);
         }
     }

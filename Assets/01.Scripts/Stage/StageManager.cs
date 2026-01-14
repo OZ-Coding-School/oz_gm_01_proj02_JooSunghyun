@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class StageManager : MonoBehaviour
@@ -6,6 +7,8 @@ public class StageManager : MonoBehaviour
     public static StageManager Instance { get; private set; }
 
     public Entity highlightPrefab;
+
+    public int mCurrStageLevel = 1;
 
     [SerializeField] private StageDataSO mCurrStageDataSO;
 
@@ -15,8 +18,6 @@ public class StageManager : MonoBehaviour
     private List<Entity> mEnemyUnits;
     private List<Entity> mNeutralUnits;
     private List<Entity> mActiveHighLIghs = new List<Entity>();
-
-    private int mCurrStageLevel = 1;
 
     private void Awake()
     {
@@ -46,6 +47,7 @@ public class StageManager : MonoBehaviour
         PoolManager.Instance.CreatePool(highlightPrefab, 60, null);
 
         InitializeStage();
+        Events.RaiseStageChange(mCurrStageLevel);
     }
     public void SetStage(StageDataSO stageData) 
     {
@@ -56,6 +58,7 @@ public class StageManager : MonoBehaviour
     }
     public void InitializeStage() 
     {
+        Debug.Log("Stage Initialize");
         ClearStage();
         GenerateBase();
         GenerateMap();
@@ -68,6 +71,8 @@ public class StageManager : MonoBehaviour
 
         SetStage(nextStage);
         mCurrStageLevel++;
+        Events.RaiseStageChange(mCurrStageLevel);
+        BattleManager.Instance.InitializeBattle();
     }
     private void HandleEntityDeath(Entity entity) 
     {
@@ -91,6 +96,30 @@ public class StageManager : MonoBehaviour
         PoolManager.Instance.ReturnPool(entity);
     }
 
+    public void UpdateVisibility(Entity player, int viewRange) 
+    {
+        if (player == null) return;
+
+        Vector3Int playerPos = player.GetPosition();
+
+        foreach (var kv in mTiles)
+        {
+            TileBase tile = kv.Value;
+            Vector3Int tilePos = kv.Key;
+            int dist = AStarPathFinder.Heuristic(playerPos, tilePos);
+            if (dist <= viewRange) 
+            { tile.SetVisible(true); }
+            else { tile.SetVisible(false); }
+        }
+
+        foreach (var enemy in mEnemyUnits) 
+        {
+            if (enemy == null) return;
+            Vector3Int enemyPos = enemy.GetPosition();
+            int dist = AStarPathFinder.Heuristic(playerPos, enemyPos);
+            enemy.gameObject.SetActive(dist <= viewRange);
+        }
+    }
     #region StageGenerate
     //스테이지 생성
     private void GenerateMap() 
@@ -113,9 +142,6 @@ public class StageManager : MonoBehaviour
     private void GenerateBase() 
     {
         TileSpawnData tile = mCurrStageDataSO.baseTile;
-        Debug.Log($"Prefab from tileDataBase: {GameManager.Instance.tileDataBase.GetPrefab(tile.tileId).GetInstanceID()}");
-    
-
         for (int x = 0; x < mCurrStageDataSO.stageMaxX; x++)
         {
             for (int z = 0; z < mCurrStageDataSO.stageMaxZ; z++)
@@ -227,8 +253,8 @@ public class StageManager : MonoBehaviour
         }
         return walkable;
     }
-    public List<Entity> GetPlayerUnits() { return mPlayerUnits; }
-    public List<Entity> GetEnemyUnits() { return mEnemyUnits; }
+    public List<Entity> GetPlayerUnits() { return mPlayerUnits ?? new List<Entity>(); }
+    public List<Entity> GetEnemyUnits() { return mEnemyUnits ?? new List<Entity>(); }
     #endregion
     
     //배틀 끝나면 스테이지 청소(리턴 풀 등...)
@@ -254,7 +280,7 @@ public class StageManager : MonoBehaviour
             mEnemyUnits.Clear();
         }
 
-        if (mPlayerUnits != null)
+        if (mNeutralUnits != null)
         {
             foreach (var kv in mNeutralUnits)
                 PoolManager.Instance.ReturnPool(kv);

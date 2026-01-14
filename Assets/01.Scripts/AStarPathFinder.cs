@@ -74,7 +74,7 @@ public class AStarPathFinder
         return null;
     }
 
-    private static int Heuristic(Vector3Int a, Vector3Int b) 
+    public static int Heuristic(Vector3Int a, Vector3Int b) 
     {
         return Mathf.Abs(a.x - b.x) + Mathf.Abs(a.z - b.z);
     }

@@ -43,6 +43,8 @@ public class BattleManager : MonoBehaviour
         var players = StageManager.Instance.GetPlayerUnits();
         var enemies = StageManager.Instance.GetEnemyUnits();
 
+        Debug.Log($"플레이어 : {players.Count}, 에너미 : {enemies.Count}");
+
         foreach (var player in players) { mTurnOrder.Enqueue(player); }
         foreach (var enemy in enemies) { mTurnOrder.Enqueue(enemy); }
     }
@@ -61,11 +63,13 @@ public class BattleManager : MonoBehaviour
         }
 
         Events.RaiseSkillUIUpdate(nextEntity.GetUnitData().skills);
+        Events.RaiseAPUpdate(nextEntity.currUnitAP);
 
         if (nextEntity.GetUnitData().unitType == EEntityType.PlayerUnit)
         {
             //플레이어 턴 스테이트머신으로 행동 관리
             mTurnStateMachine = new PlayerTurnStateMachine(nextEntity);
+            StageManager.Instance.UpdateVisibility(nextEntity, nextEntity.currUnitViewRange);
         }
         else if(nextEntity.GetUnitData().unitType == EEntityType.Enemy)
         {
@@ -74,7 +78,10 @@ public class BattleManager : MonoBehaviour
         }
 
         mTurnStateMachine.StartTurn();
-        mTurnOrder.Enqueue(nextEntity);
+        if (nextEntity != null && nextEntity.currUnitHP > 0)
+        {
+            mTurnOrder.Enqueue(nextEntity);
+        }
     }
 
     public void EndCurrentTurn() 
@@ -95,10 +102,13 @@ public class BattleManager : MonoBehaviour
     {
         BroadCastTurnInfo("Battle End!");
 
+        mTurnStateMachine?.Dispose();
+
         if (StageManager.Instance.GetEnemyUnits().Count == 0)
         {
             //승리
             StageManager.Instance.LoadNextStage();
+            //다시 시작은 스테이지 매니저가 맵 생성 후 호출
         }
         else if (StageManager.Instance.GetPlayerUnits().Count == 0) 
         {
