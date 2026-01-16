@@ -23,12 +23,22 @@ public class BattleSceneUI : MonoBehaviour
     public TextMeshProUGUI turnInfoText;
     public TextMeshProUGUI apInfoText;
 
+    public DamagePopUpUI damagePopUpUI;
+
+    private Vector3 mPopUpOffset = new Vector3(4, 4, 0);
+
+    private void Start()
+    {
+        PoolManager.Instance.CreatePool(damagePopUpUI, 5, null);   
+    }
+
     private void OnEnable()
     {
         Events.OnSkillUIUpdate += UpdateSkillUI;
         Events.OnTurnInfoUpdate += UpdateTurnInfo;
         Events.OnAPUpdate += UpdateAPInfo;
         Events.OnStageChange += UpdateStageInfo;
+        Events.OnDamageDealt += PopUpDamage;
 
         endTurnButton.onClick.RemoveAllListeners();
         endTurnButton.onClick.AddListener(() => Events.RaiseTurnSkip());
@@ -40,6 +50,7 @@ public class BattleSceneUI : MonoBehaviour
         Events.OnTurnInfoUpdate -= UpdateTurnInfo;
         Events.OnAPUpdate -= UpdateAPInfo;
         Events.OnStageChange -= UpdateStageInfo;
+        Events.OnDamageDealt -= PopUpDamage;
     }
 
     private void UpdateSkillUI(List<SkillSO> skills)
@@ -86,5 +97,17 @@ public class BattleSceneUI : MonoBehaviour
         int front = (stageLevel - 1) / 10 + 1;
         int back = (stageLevel - 1) % 10 + 1;
         stageInfoText.text = $"Stage {front} - {back}";
+    }
+
+    private void PopUpDamage(float damage, Entity caster, Entity target) 
+    {
+        DamagePopUpUI popUp = PoolManager.Instance.GetFromPool(damagePopUpUI);
+        popUp.transform.position = target.transform.position + mPopUpOffset;
+        popUp.SetDamage((int)damage);
+    }
+
+    public void PopUp(GameObject popUp) 
+    {
+        popUp.SetActive(!popUp.activeSelf);
     }
 }

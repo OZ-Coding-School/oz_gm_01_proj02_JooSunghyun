@@ -22,6 +22,11 @@ public class UpgradeManager : MonoBehaviour
     {
         Instance = this;
         revolverCylinder = new RevolverSylinder();
+
+        if (GameObject.FindWithTag(Define.Player).TryGetComponent(out Entity entity))
+        {
+            mPlayer = entity;
+        }
     }
 
     private void OnEnable()
@@ -75,10 +80,7 @@ public class UpgradeManager : MonoBehaviour
 
     private void ApplyUpgrade(UpgradeSO upgrade)
     {
-        if (GameObject.FindWithTag("Player").TryGetComponent(out Entity entity))
-        {
-            mPlayer = entity;
-        }
+        CheckPlayer();
 
         IUpgradeEffect effect = UpgradeFactory.CreateEffect(upgrade);
         activeUpgrades.Add(effect);
@@ -87,11 +89,24 @@ public class UpgradeManager : MonoBehaviour
 
     private void UpdateApplyUpgrade(int i) 
     {
+        CheckPlayer();
+
         if (activeUpgrades.Count > 0) 
         {
             foreach (var upgrade in activeUpgrades) 
             {
                 upgrade.Apply(mPlayer);
+            }
+        }
+    }
+
+    private void CheckPlayer() 
+    {
+        if (!mPlayer.isActiveAndEnabled)
+        {
+            if (GameObject.FindWithTag(Define.Player).TryGetComponent(out Entity entity))
+            {
+                mPlayer = entity;
             }
         }
     }

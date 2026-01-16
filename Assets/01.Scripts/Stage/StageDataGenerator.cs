@@ -9,8 +9,8 @@ public class StageDataGenerator
     {
         StageDataSO newStage = ScriptableObject.CreateInstance<StageDataSO>();
 
-        newStage.stageMaxX = 12 + (stageLevel / 10) * 2;
-        newStage.stageMaxZ = 12 + (stageLevel / 10) * 2;
+        newStage.stageMaxX = 15 + (stageLevel / 10) * 2;
+        newStage.stageMaxZ = 15 + (stageLevel / 10) * 2;
         mEnemyCount += stageLevel / 5; 
 
         newStage.baseTile = new TileSpawnData { tileId = 0 };

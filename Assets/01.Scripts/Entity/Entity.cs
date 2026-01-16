@@ -45,7 +45,7 @@ public class Entity : MonoBehaviour
             mHealthBar.SetMaxHealth(GetUnitData().unitHP);
             mHealthBar.SetHealth(currUnitHP);
         }
-        Debug.Log($"{gameObject.name} + {currUnitAP + bonusAP}");
+ 
         OccupyTile();
     }
 

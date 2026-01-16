@@ -27,7 +27,9 @@ public enum EUpgradeEffectType
 {
     AttackBoost,
     DefenseBoost,
-    APBoost
+    APBoost,
+    CriticalBullet,
+    HealBullet
 }
 [System.Serializable]
 public class TileSpawnData 
