@@ -21,6 +21,7 @@ MonoBehaviour:
   unitHP: 20
   unitAttack: 10
   unitDefense: 10
+  unitExp: 6
   skills:
   - {fileID: 11400000, guid: 69059eb0ed8e2774d936b84f377fe8f0, type: 2}
   - {fileID: 11400000, guid: 1519f438fbc1e86479f279623855f238, type: 2}

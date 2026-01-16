@@ -115,8 +115,7 @@ public class MoveNode : BTNode
             if (entity.GetPosition() == mTargetPos + new Vector3Int(0, 1, 0))
             {
                 BattleManager.Instance.BroadCastTurnInfo("Move Complete");
-                entity.currUnitAP -= mPath.Count - 1;//시작칸 코스트 들어가는거 빼기
-                Events.RaiseAPUpdate(entity.currUnitAP);
+                entity.SpendAP( mPath.Count - 1);//시작칸 코스트 들어가는거 빼기
 
                 Events.RaiseMove(entity, mPath.Count);
                 mIsCompleted = true;
@@ -208,10 +207,16 @@ public class TargetSelectNode : InputNode
 //공격 실행 노드
 public class AttackNode : BTNode
 {
+    private ISkillAction mSkillAction;
     private SkillSO mSkill;
     private Entity mTarget;
     private bool mIsSkillUsed = false;
-    public AttackNode(SkillSO skill, Entity target) { mSkill = skill; mTarget = target; }
+    public AttackNode(ISkillAction skillAction, SkillSO skill, Entity target) 
+    {
+        mSkillAction = skillAction;
+        mSkill = skill; 
+        mTarget = target; 
+    }
     public override bool Evaluate(Entity entity) 
     {
         if (entity == null || !entity.gameObject.activeSelf)
@@ -221,12 +226,11 @@ public class AttackNode : BTNode
         }
 
         if (mIsSkillUsed) return true;
-        ISkillAction skillAction = SkillFactory.CreateSkill(mSkill);
-        if (skillAction != null && mTarget != null) 
+  
+        if (mSkillAction != null && mTarget != null) 
         {
-            skillAction.SkillAction(entity, mTarget);
-
-            entity.currUnitAP -= mSkill.skillCost;
+            mSkillAction.SkillAction(entity, mTarget);
+            entity.SpendAP(mSkill.skillCost);
             entity.ResetTempMultiplier();//임시버프 꺼주기
             StageManager.Instance.ClearHighlights();
 

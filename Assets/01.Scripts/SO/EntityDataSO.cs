@@ -13,6 +13,7 @@ public class EntityDataSO : ScriptableObject
     public float unitHP;
     public float unitAttack;
     public float unitDefense;
+    public float unitExp;
 
     public List<SkillSO> skills = new List<SkillSO>();
 }

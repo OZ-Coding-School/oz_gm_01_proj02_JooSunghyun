@@ -36,7 +36,7 @@ public class CylinderUI : MonoBehaviour, IDragHandler, IEndDragHandler
 
     public void ReloadCylinder() 
     {
-        mCylinder = GameManager.Instance.revolverCylinder;
+        mCylinder = UpgradeManager.Instance.revolverCylinder;
         mCylinder.Reload();
 
         EBulletType[] bullets = mCylinder.GetBullets();
@@ -94,7 +94,10 @@ public class CylinderUI : MonoBehaviour, IDragHandler, IEndDragHandler
         SetEffevtText(selectedBullet);
         yield return mWaitForSeconds;
 
-        Events.RaiseCylinderSpin(selectedBullet);
+        List<EBulletType> bullets = new List<EBulletType>();
+        bullets.Add(selectedBullet);
+
+        Events.RaiseCylinderSpin(bullets);
         mEffectInfoPanel.SetActive(false);
         gameObject.SetActive(false);
     }

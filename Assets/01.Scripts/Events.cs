@@ -37,7 +37,12 @@ public static class Events
     //엔티티 사망
     public static event Action<Entity> OnEntityDied;
     //실린더 돌리기
-    public static Action<EBulletType> OnCylinderSpin;
+    public static event Action<List<EBulletType>> OnCylinderSpin;
+
+    //레벨업
+    public static event Action<int, List<UpgradeSO>> OnLevelUp;
+    //강화효과 선택
+    public static event Action<UpgradeSO> OnUpgradeSelected;
 
     public static void RaiseTurnStart(Entity entity) => OnTurnStart?.Invoke(entity);
     public static void RaiseTurnEnd(Entity entity) => OnTurnEnd?.Invoke(entity);
@@ -63,6 +68,10 @@ public static class Events
     //엔티티 관련
     public static void RaiseAPUpdate(int ap) => OnAPUpdate?.Invoke(ap);
     public static void RaiseEntityDied(Entity entity) => OnEntityDied?.Invoke(entity);
-    public static void RaiseCylinderSpin(EBulletType bullet) => OnCylinderSpin?.Invoke(bullet);
+    public static void RaiseCylinderSpin(List<EBulletType> bullets) => OnCylinderSpin?.Invoke(bullets);
+
+    //레벨업과 업그레이드
+    public static void RaiseLevelUp(int newLevel, List<UpgradeSO> choices) => OnLevelUp?.Invoke(newLevel, choices);
+    public static void RaiseUpgradeSelected(UpgradeSO selected) => OnUpgradeSelected?.Invoke(selected);
 }
 

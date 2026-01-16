@@ -39,13 +39,12 @@ public class BattleManager : MonoBehaviour
     public void SetUp() 
     {
         mTurnOrder.Clear();
+        mTurnStateMachine = null;
 
         var players = StageManager.Instance.GetPlayerUnits();
         var enemies = StageManager.Instance.GetEnemyUnits();
 
-        Debug.Log($"플레이어 : {players.Count}, 에너미 : {enemies.Count}");
-
-        foreach (var player in players) { mTurnOrder.Enqueue(player); }
+        foreach (var player in players) { mTurnOrder.Enqueue(player); Events.RaiseAPUpdate(player.currUnitAP + player.bonusAP); }
         foreach (var enemy in enemies) { mTurnOrder.Enqueue(enemy); }
     }
 
@@ -63,7 +62,7 @@ public class BattleManager : MonoBehaviour
         }
 
         Events.RaiseSkillUIUpdate(nextEntity.GetUnitData().skills);
-        Events.RaiseAPUpdate(nextEntity.currUnitAP);
+        Events.RaiseAPUpdate(nextEntity.currUnitAP + nextEntity.bonusAP);
 
         if (nextEntity.GetUnitData().unitType == EEntityType.PlayerUnit)
         {

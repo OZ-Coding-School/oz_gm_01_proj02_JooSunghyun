@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Collections;
 using UnityEngine;
+using Unity.VisualScripting;
 
 public class Entity : MonoBehaviour
 {
@@ -44,7 +45,7 @@ public class Entity : MonoBehaviour
             mHealthBar.SetMaxHealth(GetUnitData().unitHP);
             mHealthBar.SetHealth(currUnitHP);
         }
-
+        Debug.Log($"{gameObject.name} + {currUnitAP + bonusAP}");
         OccupyTile();
     }
 
@@ -106,6 +107,8 @@ public class Entity : MonoBehaviour
                 StageManager.Instance.UpdateVisibility(this, currUnitViewRange);
             }
         }
+
+        transform.rotation = Quaternion.identity;
     }
 
     //공격 알고리즘
@@ -132,6 +135,15 @@ public class Entity : MonoBehaviour
     public EntityDataSO GetUnitData()
     {
         return unitData;
+    }
+    public void SpendAP(int AP) 
+    {
+        currUnitAP -= AP;
+        if (currUnitAP < 0) { bonusAP -= Mathf.Abs(currUnitAP); }
+        if (this.isActiveAndEnabled) 
+        {
+            Events.RaiseAPUpdate(currUnitAP + bonusAP);
+        }
     }
     #endregion
 }

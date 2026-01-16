@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -5,7 +6,7 @@ using UnityEngine;
 public class EnemyTurnStateMachine : TurnStateMachine
 {
     private Entity mCurrEntity;
-    private WaitForSeconds mWaitForSeconds = new WaitForSeconds(Random.Range(0.6f, 1.2f));
+    private WaitForSeconds mWaitForSeconds = new WaitForSeconds(UnityEngine.Random.Range(0.6f, 1.2f));
 
     public EnemyTurnStateMachine(Entity entity) : base(entity)
     {
@@ -18,7 +19,7 @@ public class EnemyTurnStateMachine : TurnStateMachine
         //이벤트 발행
         BattleManager.Instance.BroadCastTurnInfo("Enemy Turn Start");
         BattleManager.Instance.BroadCastSkillUIInfo(mCurrEntity.GetUnitData().skills);
-        Events.RaiseAPUpdate(mCurrEntity.currUnitAP);
+        Events.RaiseAPUpdate(mCurrEntity.currUnitAP + mCurrEntity.bonusAP);
         BattleManager.Instance.StartCoroutine(EnemyActionCo());
     }
 
@@ -58,7 +59,15 @@ public class EnemyTurnStateMachine : TurnStateMachine
                 {
                     Entity target = StageManager.Instance.GetPlayerUnits()[0];
                     SkillSO attackSkill = mCurrEntity.GetUnitData().skills[0];
-                    mActionQueue.Enqueue(new AttackNode(attackSkill, target));
+
+                    ISkillAction baseSkill = SkillFactory.CreateSkill(attackSkill);
+
+                    List<EBulletType> enemyBullets = new List<EBulletType>();
+                    enemyBullets.Add(GetRandomBullet());
+
+                    ISkillAction decoratedSkill = BulletFactory.ApplyBulletEffect(enemyBullets, baseSkill);
+
+                    mActionQueue.Enqueue(new AttackNode(decoratedSkill, attackSkill, target));
                 }
                 else if (currentNode is AttackNode) 
                 {
@@ -88,5 +97,12 @@ public class EnemyTurnStateMachine : TurnStateMachine
             }
         }
         return closest;
+    }
+
+    private EBulletType GetRandomBullet() 
+    {
+        int i = UnityEngine.Random.Range(0, Enum.GetValues(typeof(EBulletType)).Length);
+        EBulletType[] bullets = (EBulletType[])Enum.GetValues(typeof(EBulletType));
+        return bullets[i];
     }
 }
