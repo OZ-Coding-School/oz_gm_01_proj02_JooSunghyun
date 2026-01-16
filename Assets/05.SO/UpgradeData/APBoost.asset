@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ab2c7f33d8df8c949bb7577f2c4eb34c, type: 3}
+  m_Name: APBoost
+  m_EditorClassIdentifier: Assembly-CSharp::UpgradeSO
+  upgradeName: APBoost
+  description: AP +5
+  icon: {fileID: 21300000, guid: 0d1c3adc675086546a078068bfb10b99, type: 3}
+  effectType: 2
+  value: 5

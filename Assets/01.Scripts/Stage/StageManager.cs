@@ -147,7 +147,6 @@ public class StageManager : MonoBehaviour
             for (int z = 0; z < mCurrStageDataSO.stageMaxZ; z++)
             {
                 var prefab = PoolManager.Instance.GetFromPool(GameManager.Instance.tileDataBase.GetPrefab(tile.tileId));
-                if (prefab == null) Debug.Log("null");
                 Vector3 pos = new Vector3(
                     x * PublicConst.TileWidth,
                     -1 * PublicConst.TileHeights,

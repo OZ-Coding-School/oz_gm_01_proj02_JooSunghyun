@@ -1,20 +1,19 @@
-﻿
-using System.Diagnostics;
+﻿using NUnit.Framework;
+using System.Collections.Generic;
 
 public class PlayerTurnStateMachine : TurnStateMachine
 {
     private Entity mPlayerEntity;
     private SkillSO mSelectedSkill;
     private Entity mSelectedTarget;
-    private EBulletType mSelectedBullet;
+    private List<EBulletType> mSelectedBullets;
     private RevolverSylinder mCylinder;
-    private BulletEffectHandler mBulletHandler;
+    private ISkillAction mPreparedSkill;
 
     public PlayerTurnStateMachine(Entity entity) : base(entity)
     {
         mPlayerEntity = entity;
-        mCylinder = GameManager.Instance.revolverCylinder;
-        mBulletHandler = new BulletEffectHandler();
+        mCylinder = UpgradeManager.Instance.revolverCylinder;
 
         Events.OnMoveSelected += HandleMoveSelected;
         Events.OnSkillSelected += HandleSkillSelected;
@@ -24,11 +23,12 @@ public class PlayerTurnStateMachine : TurnStateMachine
 
     public override void StartTurn()
     {
+        mActionQueue.Clear();
         mPlayerEntity.currUnitAP += mPlayerEntity.GetUnitData().unitAP;
      
         BattleManager.Instance.BroadCastTurnInfo("Player Turn");
         BattleManager.Instance.BroadCastSkillUIInfo(mPlayerEntity.GetUnitData().skills);
-        Events.RaiseAPUpdate(mPlayerEntity.currUnitAP);
+        Events.RaiseAPUpdate(mPlayerEntity.currUnitAP + mPlayerEntity.bonusAP);
     }
 
     public override void Update()
@@ -57,8 +57,10 @@ public class PlayerTurnStateMachine : TurnStateMachine
                     mSelectedTarget = targetNode.GetSelectedTarget();
                     if (mSelectedSkill != null && mSelectedTarget != null)
                     {
-                        mBulletHandler.ApplyEffect(mSelectedBullet, mPlayerEntity, mSelectedTarget);
-                        mActionQueue.Enqueue(new AttackNode(mSelectedSkill, mSelectedTarget));
+                        ISkillAction baseSkill = SkillFactory.CreateSkill(mSelectedSkill);
+                        ISkillAction decoratedSkill = BulletFactory.ApplyBulletEffect(mSelectedBullets, baseSkill);
+                        mPreparedSkill = decoratedSkill;
+                        mActionQueue.Enqueue(new AttackNode(decoratedSkill, mSelectedSkill, mSelectedTarget));
                     }
                     else
                     {
@@ -77,9 +79,9 @@ public class PlayerTurnStateMachine : TurnStateMachine
         mActionQueue.Enqueue(new WaitInputNode(mPlayerEntity));
         BattleManager.Instance.BroadCastTurnInfo("Select tile to move");
     }
-    private void HandleCylinderSpin(EBulletType t) 
+    private void HandleCylinderSpin(List<EBulletType> bullets) 
     {
-        mSelectedBullet = t;
+        mSelectedBullets = bullets;
         mActionQueue.Enqueue(new TargetSelectNode(mSelectedSkill));
         BattleManager.Instance.BroadCastTurnInfo("Select target to use");
     }
@@ -112,16 +114,12 @@ public class PlayerTurnStateMachine : TurnStateMachine
     }
     private void AfterAction() 
     {
-        UnityEngine.Debug.Log("After Action");
-        Events.RaiseAPUpdate(mPlayerEntity.currUnitAP);
         if (mPlayerEntity.currUnitAP <= 0)
         {
-            UnityEngine.Debug.Log("End Turn");
             mActionQueue.Enqueue(new EndTurnNode());
         }
         else 
         {
-            UnityEngine.Debug.Log("Wait Action");
             mActionQueue.Enqueue(new WaitNode());
             BattleManager.Instance.BroadCastTurnInfo("Choose your action");
             BattleManager.Instance.BroadCastSkillUIInfo(mPlayerEntity.GetUnitData().skills);
@@ -132,6 +130,7 @@ public class PlayerTurnStateMachine : TurnStateMachine
     {
         Events.OnMoveSelected -= HandleMoveSelected;
         Events.OnSkillSelected -= HandleSkillSelected;
+        Events.OnCylinderSpin -= HandleCylinderSpin;
         Events.OnTurnSkip -= HandleTurnSkip;
     }
 }

@@ -6,28 +6,29 @@ public enum EEntityType
     PlayerUnit = 1,
     Enemy = 2
 }
-
 public enum ETileType 
 {
     Plane,
     Desert,
     Snow
 }
-
 public enum ESkillType 
 {
     NormalAttack,
     NormalHeal,
 }
-
-
 public enum EBulletType 
 {
     Normal=0,
     Critical=1,
     Heal=2
 }
-
+public enum EUpgradeEffectType 
+{
+    AttackBoost,
+    DefenseBoost,
+    APBoost
+}
 [System.Serializable]
 public class TileSpawnData 
 {
