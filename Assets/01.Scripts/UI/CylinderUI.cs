@@ -110,10 +110,10 @@ public class CylinderUI : MonoBehaviour, IDragHandler, IEndDragHandler
                 mEffectTExt.text = "Normal Bullet";
                 break;
             case EBulletType.Critical:
-                mEffectTExt.text = "Damage X 2";
+                mEffectTExt.text = "Critical Bullet";
                 break;
             case EBulletType.Heal:
-                mEffectTExt.text = "HP +20";
+                mEffectTExt.text = "Heal Bullet";
                 break;
         }
     }

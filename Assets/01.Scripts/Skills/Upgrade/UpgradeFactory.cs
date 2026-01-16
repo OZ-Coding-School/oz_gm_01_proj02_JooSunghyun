@@ -12,6 +12,10 @@ public static class UpgradeFactory
                 return new DefenseBoostEffect(upgrade.value);
             case EUpgradeEffectType.APBoost:
                 return new APBoostEffect(upgrade.value);
+            case EUpgradeEffectType.CriticalBullet:
+                return new CriticalBulletEffect(upgrade.value);
+            case EUpgradeEffectType.HealBullet:
+                return new HealBulletEffect(upgrade.value);
             default:
                 throw new System.NotImplementedException();
         }
