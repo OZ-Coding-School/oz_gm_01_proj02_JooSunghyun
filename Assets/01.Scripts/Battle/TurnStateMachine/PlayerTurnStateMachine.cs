@@ -64,7 +64,8 @@ public class PlayerTurnStateMachine : TurnStateMachine
                     }
                     else
                     {
-                        AfterAction();
+                        mActionQueue.Enqueue(new WaitNode());
+                        BattleManager.Instance.BroadCastTurnInfo("No valid Target");
                     }
                 }
                 else if (currentNode is AttackNode) 

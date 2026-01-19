@@ -156,8 +156,23 @@ public class TargetSelectNode : InputNode
             Vector3Int targetPos = target.GetPosition() + new Vector3Int(0, -1, 0);
             int dist = AStarPathFinder.Heuristic(casterPos, targetPos);
 
-            if (dist <= mSelectedSkill.skillRange)
+            //스킬 범위 & 시야 범위 체크
+            if (dist <= mSelectedSkill.skillRange && dist <= entity.currUnitViewRange)
             {
+                //Vector3 casterWoarldPos = entity.transform.position;
+                //Vector3 targetWorldPos = target.transform.position;
+                //Vector3 dir = (targetWorldPos - targetPos).normalized;
+                //float distance = Vector3.Distance(casterWoarldPos, targetWorldPos);
+
+                //실제 둘 사이에 장애물이 없는지
+                //if (Physics.Raycast(casterWoarldPos, dir, out RaycastHit hit, distance)) 
+                //{
+                //    if (hit.collider.gameObject == target.gameObject) 
+                //    {
+                //        mValidTargets.Add(target);
+                //        StageManager.Instance.ShowHiglight(target.gameObject.transform.position);
+                //    }
+                //}
                 mValidTargets.Add(target);
                 StageManager.Instance.ShowHiglight(target.gameObject.transform.position);
             }
