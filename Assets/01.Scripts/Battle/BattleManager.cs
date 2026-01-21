@@ -1,5 +1,7 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+
 
 public class BattleManager : MonoBehaviour
 {
@@ -8,17 +10,21 @@ public class BattleManager : MonoBehaviour
     private Queue<Entity> mTurnOrder = new Queue<Entity>();
     private TurnStateMachine mTurnStateMachine;
 
+    private WaitForSeconds mWaitForSeconds = new WaitForSeconds(2.0f);
+
+    [Header("EventChannel")]
+    [SerializeField] private GameEventChannelSO mEventChannel;
     private void Awake()
     {
         Instance = this;
     }
     private void OnEnable()
     {
-        Events.OnEntityDied += CheckBattleEnd;
+        mEventChannel.OnEventRaised += HandleGameEvent;
     }
     private void OnDisable()
     {
-        Events.OnEntityDied -= CheckBattleEnd;
+        mEventChannel.OnEventRaised -= HandleGameEvent;
     }
     private void Start()
     {
@@ -44,8 +50,13 @@ public class BattleManager : MonoBehaviour
         var players = StageManager.Instance.GetPlayerUnits();
         var enemies = StageManager.Instance.GetEnemyUnits();
 
-        foreach (var player in players) { mTurnOrder.Enqueue(player); Events.RaiseAPUpdate(player.currUnitAP + player.bonusAP); }
-        foreach (var enemy in enemies) { mTurnOrder.Enqueue(enemy); }
+        foreach (var player in players)
+        {
+            mTurnOrder.Enqueue(player);
+            var apPayload = new APUpdatePayload { ap = player.currUnitAP + player.bonusAP };
+            mEventChannel.RaiseEvent(EGameEventType.APUpdate, apPayload);
+        }
+            foreach (var enemy in enemies) { mTurnOrder.Enqueue(enemy); }
     }
 
 
@@ -61,19 +72,22 @@ public class BattleManager : MonoBehaviour
             return;
         }
 
-        Events.RaiseSkillUIUpdate(nextEntity.GetUnitData().skills);
-        Events.RaiseAPUpdate(nextEntity.currUnitAP + nextEntity.bonusAP);
+        var skillPayload = new SkillUIUpdatePayload { skills = nextEntity.GetUnitData().skills };
+        mEventChannel.RaiseEvent(EGameEventType.SkillUIUpdate, skillPayload);
+
+        var apPayload = new APUpdatePayload { ap = nextEntity.currUnitAP + nextEntity.bonusAP };
+        mEventChannel.RaiseEvent(EGameEventType.APUpdate, apPayload);
 
         if (nextEntity.GetUnitData().unitType == EEntityType.PlayerUnit)
         {
             //플레이어 턴 스테이트머신으로 행동 관리
-            mTurnStateMachine = new PlayerTurnStateMachine(nextEntity);
+            mTurnStateMachine = new PlayerTurnStateMachine(nextEntity, mEventChannel);
             StageManager.Instance.UpdateVisibility(nextEntity, nextEntity.currUnitViewRange);
         }
         else if(nextEntity.GetUnitData().unitType == EEntityType.Enemy)
         {
             //에너미는 에너미걸로
-            mTurnStateMachine = new EnemyTurnStateMachine(nextEntity);
+            mTurnStateMachine = new EnemyTurnStateMachine(nextEntity, mEventChannel);
         }
 
         mTurnStateMachine.StartTurn();
@@ -106,7 +120,7 @@ public class BattleManager : MonoBehaviour
         if (StageManager.Instance.GetEnemyUnits().Count == 0)
         {
             //승리
-            StageManager.Instance.LoadNextStage();
+            StartCoroutine(LoadNextStageCo());
             //다시 시작은 스테이지 매니저가 맵 생성 후 호출
         }
         else if (StageManager.Instance.GetPlayerUnits().Count == 0) 
@@ -117,11 +131,13 @@ public class BattleManager : MonoBehaviour
 
     public void BroadCastTurnInfo(string info) 
     {
-        Events.RaiseTurnInfoUpdate(info);
+        var payload = new TurnInfoPayload { info = info };
+        mEventChannel.RaiseEvent(EGameEventType.TurnInfoUpdate, payload);
     }
     public void BroadCastSkillUIInfo(List<SkillSO> skills) 
     {
-        Events.RaiseSkillUIUpdate(skills);
+        var payload = new SkillUIUpdatePayload { skills = skills };
+        mEventChannel.RaiseEvent(EGameEventType.SkillUIUpdate, payload);
     }
     private bool IsBattleEnd() 
     {
@@ -136,8 +152,16 @@ public class BattleManager : MonoBehaviour
     {
         if (IsBattleEnd()) { EndBattle(); }
     }
-
-    //승리조건 관리
-    //전투가 끝나면 게임 매니저에 전달
-    //스테이지 매니저에 스테이지 청소 지시(필요하면)
+    private void HandleGameEvent(EGameEventType type, object payload) 
+    {
+        if (type == EGameEventType.EntityDied && payload is EntityDiedPayload died) 
+        {
+            CheckBattleEnd(died.entity);
+        }
+    }
+    private IEnumerator LoadNextStageCo() 
+    {
+        yield return mWaitForSeconds;
+        StageManager.Instance.LoadNextStage();
+    }
 }

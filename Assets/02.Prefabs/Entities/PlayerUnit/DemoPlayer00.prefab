@@ -1182,6 +1182,7 @@ MonoBehaviour:
   bonusAP: 0
   tempAttackMultiplier: 1
   tempDefenseMultiplier: 1
+  mEventChannel: {fileID: 11400000, guid: fb2cf7863f5613c44ab25e1f698cf8d5, type: 2}
 --- !u!65 &7458237309125056915
 BoxCollider:
   m_ObjectHideFlags: 0

@@ -19,17 +19,19 @@ public class StageManager : MonoBehaviour
     private List<Entity> mNeutralUnits;
     private List<Entity> mActiveHighLIghs = new List<Entity>();
 
+    [Header("EventChannel")]
+    [SerializeField] private GameEventChannelSO mEventChannel;
     private void Awake()
     {
         Instance = this;
     }
     private void OnEnable()
     {
-        Events.OnEntityDied += HandleEntityDeath;
+        mEventChannel.OnEventRaised += HandleGameEvent;
     }
     private void OnDisable()
     {
-        Events.OnEntityDied -= HandleEntityDeath;
+        mEventChannel.OnEventRaised -= HandleGameEvent;
     }
     private void Start()
     {
@@ -47,7 +49,9 @@ public class StageManager : MonoBehaviour
         PoolManager.Instance.CreatePool(highlightPrefab, 60, null);
 
         InitializeStage();
-        Events.RaiseStageChange(mCurrStageLevel);
+
+        var payload = new StageChangePayload { stageLevel = mCurrStageLevel };
+        mEventChannel.RaiseEvent(EGameEventType.StageChange, payload);
     }
     public void SetStage(StageDataSO stageData) 
     {
@@ -71,8 +75,18 @@ public class StageManager : MonoBehaviour
 
         SetStage(nextStage);
         mCurrStageLevel++;
-        Events.RaiseStageChange(mCurrStageLevel);
+
+        var payload = new StageChangePayload { stageLevel = mCurrStageLevel };
+        mEventChannel.RaiseEvent(EGameEventType.StageChange, payload);
+
         BattleManager.Instance.InitializeBattle();
+    }
+    private void HandleGameEvent(EGameEventType type, object payload) 
+    {
+        if (type == EGameEventType.EntityDied && payload is EntityDiedPayload died) 
+        {
+            HandleEntityDeath(died.entity);
+        }
     }
     private void HandleEntityDeath(Entity entity) 
     {
@@ -177,18 +191,21 @@ public class StageManager : MonoBehaviour
             switch (entity.entityType) 
             {
                 case EEntityType.Neutral:
-                    newEntity.tag = "Neutral";
+                    newEntity.tag = Define.Neutral;
                     mNeutralUnits.Add(newEntity);
                     break;
                 case EEntityType.PlayerUnit:
-                    newEntity.tag = "Player";
+                    newEntity.tag = Define.Player;
                     mPlayerUnits.Add(newEntity);
                     break;
                 case EEntityType.Enemy:
-                    newEntity.tag = "Enemy";
+                    newEntity.tag = Define.Enemy;
                     mEnemyUnits.Add(newEntity);
                     break;
             }
+
+            var payload = new PlayerSpawnedPayload { entity = newEntity };
+            mEventChannel.RaiseEvent(EGameEventType.PlayerSpawned, payload);
         }
     }
     #endregion

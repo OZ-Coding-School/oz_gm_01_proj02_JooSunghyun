@@ -1,4 +1,10 @@
 using System.Collections.Generic;
+public enum EBulletType
+{
+    Normal = 0,
+    Critical = 1,
+    Heal = 2
+}
 
 public static class BulletFactory
 {

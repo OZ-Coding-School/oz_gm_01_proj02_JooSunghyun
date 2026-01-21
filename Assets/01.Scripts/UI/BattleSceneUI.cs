@@ -27,6 +27,8 @@ public class BattleSceneUI : MonoBehaviour
 
     private Vector3 mPopUpOffset = new Vector3(4, 4, 0);
 
+    [Header("EventChannel")]
+    [SerializeField] private GameEventChannelSO mEventChannel;
     private void Start()
     {
         PoolManager.Instance.CreatePool(damagePopUpUI, 5, null);   
@@ -34,23 +36,49 @@ public class BattleSceneUI : MonoBehaviour
 
     private void OnEnable()
     {
-        Events.OnSkillUIUpdate += UpdateSkillUI;
-        Events.OnTurnInfoUpdate += UpdateTurnInfo;
-        Events.OnAPUpdate += UpdateAPInfo;
-        Events.OnStageChange += UpdateStageInfo;
-        Events.OnDamageDealt += PopUpDamage;
+        mEventChannel.OnEventRaised += HandleGameEvent;
 
         endTurnButton.onClick.RemoveAllListeners();
-        endTurnButton.onClick.AddListener(() => Events.RaiseTurnSkip());
+        endTurnButton.onClick.AddListener(() =>
+        {
+            mEventChannel.RaiseEvent(EGameEventType.TurnSkip);
+        });
     }
 
     private void OnDisable()
     {
-        Events.OnSkillUIUpdate -= UpdateSkillUI;
-        Events.OnTurnInfoUpdate -= UpdateTurnInfo;
-        Events.OnAPUpdate -= UpdateAPInfo;
-        Events.OnStageChange -= UpdateStageInfo;
-        Events.OnDamageDealt -= PopUpDamage;
+        mEventChannel.OnEventRaised -= HandleGameEvent;
+    }
+
+    private void HandleGameEvent(EGameEventType type, object payload)
+    {
+        switch (type)
+        {
+            case EGameEventType.SkillUIUpdate:
+                if (payload is SkillUIUpdatePayload skillPayload)
+                    UpdateSkillUI(skillPayload.skills);
+                break;
+
+            case EGameEventType.TurnInfoUpdate:
+                if (payload is TurnInfoPayload turnPayload)
+                    UpdateTurnInfo(turnPayload.info);
+                break;
+
+            case EGameEventType.APUpdate:
+                if (payload is APUpdatePayload apPayload)
+                    UpdateAPInfo(apPayload.ap);
+                break;
+
+            case EGameEventType.StageChange:
+                if (payload is StageChangePayload stagePayload)
+                    UpdateStageInfo(stagePayload.stageLevel);
+                break;
+
+            case EGameEventType.DamageDealt:
+                if (payload is DamagePayload dmgPayload)
+                    PopUpDamage(dmgPayload.damage, dmgPayload.attacker, dmgPayload.target);
+                break;
+        }
     }
 
     private void UpdateSkillUI(List<SkillSO> skills)
@@ -77,9 +105,23 @@ public class BattleSceneUI : MonoBehaviour
         skillButton_3.onClick.RemoveAllListeners();
 
         //새로 연결해서 이벤트 발행
-        skillButton_1.onClick.AddListener(() => Events.RaiseSkillSelected(0));
-        skillButton_2.onClick.AddListener(() => Events.RaiseSkillSelected(1));
-        skillButton_3.onClick.AddListener(() => Events.RaiseMoveSelected());
+        skillButton_1.onClick.AddListener(() =>
+        {
+            var payload = new SkillSelectedPayload { skillIndex = 0 };
+            mEventChannel.RaiseEvent(EGameEventType.SkillSelected, payload);
+        });
+
+        skillButton_2.onClick.AddListener(() =>
+        {
+            var payload = new SkillSelectedPayload { skillIndex = 1 };
+            mEventChannel.RaiseEvent(EGameEventType.SkillSelected, payload);
+        });
+
+        skillButton_3.onClick.AddListener(() =>
+        {
+            mEventChannel.RaiseEvent(EGameEventType.MoveSelected);
+        });
+
     }
 
     private void UpdateTurnInfo(string text) 

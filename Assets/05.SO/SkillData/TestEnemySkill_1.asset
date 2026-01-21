@@ -13,9 +13,10 @@ MonoBehaviour:
   m_Name: TestEnemySkill_1
   m_EditorClassIdentifier: Assembly-CSharp::SkillSO
   skillName: Enemy01
-  skillIcon: {fileID: 21300000, guid: 740b437cb9452ec49aca3e775a65ba38, type: 3}
+  skillIcon: {fileID: 21300000, guid: 1a4d4970fe325314aa6c8f2ee55e9548, type: 3}
   skillCost: 0
   skillDuplicator: 0
-  skillRange: 20
+  skillRange: 5
   targetType: 1
   skillType: 0
+  skillSound: {fileID: 8300000, guid: 113512454c2fee149b043afad69b381f, type: 3}

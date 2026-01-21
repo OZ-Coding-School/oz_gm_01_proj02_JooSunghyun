@@ -10,10 +10,7 @@ public abstract class InputNode : BTNode
 {
     protected bool mIsCompleted = false;
     public bool IsCompleted => mIsCompleted;
-    public override bool Evaluate(Entity entity)
-    {
-        return mIsCompleted;
-    }
+    public override bool Evaluate(Entity entity) => mIsCompleted;
 }
 //이동타일 입력 대기 노드
 public class WaitInputNode : InputNode 
@@ -82,7 +79,13 @@ public class MoveNode : BTNode
     private bool mIsStarted = false;
     private bool mIsCompleted = false;
     private List<Vector3Int> mPath = new List<Vector3Int>();
-    public MoveNode(Vector3Int targetPos) { this.mTargetPos = targetPos; }
+
+    private GameEventChannelSO mEventChannel;
+    public MoveNode(Vector3Int targetPos, GameEventChannelSO channel) 
+    { 
+        this.mTargetPos = targetPos; 
+        this.mEventChannel = channel;   
+    }
     private void CalculatePath(Entity entity) 
     {
         //플레이어가 서있는 타일 기준
@@ -106,6 +109,9 @@ public class MoveNode : BTNode
         if (!mIsStarted && mPath != null && mPath.Count > 0)
         {
             BattleManager.Instance.BroadCastTurnInfo("Moving...");
+
+            mEventChannel.RaiseEvent(EGameEventType.MoveStart);
+
             entity.Move(mPath);
             mIsStarted = true;
         }
@@ -117,7 +123,9 @@ public class MoveNode : BTNode
                 BattleManager.Instance.BroadCastTurnInfo("Move Complete");
                 entity.SpendAP( mPath.Count - 1);//시작칸 코스트 들어가는거 빼기
 
-                Events.RaiseMove(entity, mPath.Count);
+                var payload = new MoveEventPayload { entity = entity, movedDistance = mPath.Count };
+                mEventChannel.RaiseEvent(EGameEventType.MoveEnd, payload);
+
                 mIsCompleted = true;
             }       
         }
@@ -131,9 +139,12 @@ public class TargetSelectNode : InputNode
     private SkillSO mSelectedSkill;
     private bool mIsCalcullated = false;
     private List<Entity> mValidTargets = new List<Entity>();
-    public TargetSelectNode(SkillSO skillData) 
+
+    private GameEventChannelSO mEventChannel;
+    public TargetSelectNode(SkillSO skillData, GameEventChannelSO channel) 
     {
         mSelectedSkill = skillData;
+        mEventChannel = channel;
     }
     private void CheckRange(Entity entity) 
     {
@@ -148,6 +159,7 @@ public class TargetSelectNode : InputNode
                 break;
             case EEntityType.PlayerUnit:
                 targets.AddRange(StageManager.Instance.GetPlayerUnits());
+                if (!targets.Contains(entity)) targets.Add(entity);
                 break;
         }
         //사거리 계산
@@ -211,7 +223,9 @@ public class TargetSelectNode : InputNode
                     StageManager.Instance.ClearHighlights();
                     //선택한 애만 남겨두기
                     StageManager.Instance.ShowHiglight(mSelectedTarget.gameObject.transform.position);
-                    Events.RaiseTargetSelected(entity, mSelectedTarget);
+
+                    var payload = new TargetSelectedPayload { caster = entity, target = mSelectedTarget};
+                    mEventChannel.RaiseEvent(EGameEventType.TargetSelected, payload);
                 }
             }
         }
@@ -226,11 +240,14 @@ public class AttackNode : BTNode
     private SkillSO mSkill;
     private Entity mTarget;
     private bool mIsSkillUsed = false;
-    public AttackNode(ISkillAction skillAction, SkillSO skill, Entity target) 
+
+    private GameEventChannelSO mEventChannel;
+    public AttackNode(ISkillAction skillAction, SkillSO skill, Entity target, GameEventChannelSO channel) 
     {
         mSkillAction = skillAction;
         mSkill = skill; 
         mTarget = target; 
+        mEventChannel = channel;
     }
     public override bool Evaluate(Entity entity) 
     {
@@ -245,11 +262,16 @@ public class AttackNode : BTNode
         if (mSkillAction != null && mTarget != null) 
         {
             mSkillAction.SkillAction(entity, mTarget);
+            //이펙트
+            EffectManager.Instance.PlayEffect(EEffectType.MuzzleFlash, entity.transform.position);
+            EffectManager.Instance.PlayBulletTrail(entity.transform.position, mTarget.transform.position);
+
             entity.SpendAP(mSkill.skillCost);
             entity.ResetTempMultiplier();//임시버프 꺼주기
             StageManager.Instance.ClearHighlights();
 
-            Events.RaiseSkillUsed(mSkill, mTarget);
+            var payload = new SkillUsedPayload { skill = mSkill, target = mTarget };
+            mEventChannel.RaiseEvent(EGameEventType.SkillUsed, payload);
         }
         mIsSkillUsed = true;
         return true;
@@ -258,10 +280,7 @@ public class AttackNode : BTNode
 //대기 노드
 public class WaitNode : BTNode
 {
-    public override bool Evaluate(Entity entity)
-    {
-        return true;
-    }
+    public override bool Evaluate(Entity entity) => true;
 }
 //턴 종료 노드
 public class EndTurnNode : BTNode

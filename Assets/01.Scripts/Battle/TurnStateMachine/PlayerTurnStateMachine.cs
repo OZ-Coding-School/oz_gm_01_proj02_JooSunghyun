@@ -1,5 +1,6 @@
 ﻿using NUnit.Framework;
 using System.Collections.Generic;
+using UnityEngine;
 
 public class PlayerTurnStateMachine : TurnStateMachine
 {
@@ -10,15 +11,15 @@ public class PlayerTurnStateMachine : TurnStateMachine
     private RevolverSylinder mCylinder;
     private ISkillAction mPreparedSkill;
 
-    public PlayerTurnStateMachine(Entity entity) : base(entity)
+    private GameEventChannelSO mEventChannel;
+
+    public PlayerTurnStateMachine(Entity entity, GameEventChannelSO channel) : base(entity)
     {
         mPlayerEntity = entity;
         mCylinder = UpgradeManager.Instance.revolverCylinder;
+        mEventChannel = channel;
 
-        Events.OnMoveSelected += HandleMoveSelected;
-        Events.OnSkillSelected += HandleSkillSelected;
-        Events.OnCylinderSpin += HandleCylinderSpin;
-        Events.OnTurnSkip += HandleTurnSkip;
+        mEventChannel.OnEventRaised += HandleGameEvent;
     }
 
     public override void StartTurn()
@@ -28,7 +29,9 @@ public class PlayerTurnStateMachine : TurnStateMachine
      
         BattleManager.Instance.BroadCastTurnInfo("Player Turn");
         BattleManager.Instance.BroadCastSkillUIInfo(mPlayerEntity.GetUnitData().skills);
-        Events.RaiseAPUpdate(mPlayerEntity.currUnitAP + mPlayerEntity.bonusAP);
+
+        var apPayload = new APUpdatePayload { ap = mPlayerEntity.currUnitAP + mPlayerEntity.bonusAP };
+        mEventChannel.RaiseEvent(EGameEventType.APUpdate, apPayload);
     }
 
     public override void Update()
@@ -45,7 +48,7 @@ public class PlayerTurnStateMachine : TurnStateMachine
                     TileBase selectedTile = waitInputNode.GetSelectedTile();
                     if (selectedTile != null)
                     {
-                        mActionQueue.Enqueue(new MoveNode(selectedTile.GetPosition()));
+                        mActionQueue.Enqueue(new MoveNode(selectedTile.GetPosition(), mEventChannel));
                     }
                 }
                 else if (currentNode is MoveNode)
@@ -58,9 +61,15 @@ public class PlayerTurnStateMachine : TurnStateMachine
                     if (mSelectedSkill != null && mSelectedTarget != null)
                     {
                         ISkillAction baseSkill = SkillFactory.CreateSkill(mSelectedSkill);
-                        ISkillAction decoratedSkill = BulletFactory.ApplyBulletEffect(mSelectedBullets, baseSkill);
+                        ISkillAction decoratedSkill = baseSkill;
+
+                        if (mSelectedSkill.targetType == EEntityType.Enemy && mSelectedBullets != null) 
+                        {
+                            decoratedSkill = BulletFactory.ApplyBulletEffect(mSelectedBullets, baseSkill);
+                        }
+
                         mPreparedSkill = decoratedSkill;
-                        mActionQueue.Enqueue(new AttackNode(decoratedSkill, mSelectedSkill, mSelectedTarget));
+                        mActionQueue.Enqueue(new AttackNode(decoratedSkill, mSelectedSkill, mSelectedTarget, mEventChannel));
                     }
                     else
                     {
@@ -75,6 +84,29 @@ public class PlayerTurnStateMachine : TurnStateMachine
             }
         }
     }
+    private void HandleGameEvent(EGameEventType type, object payload) 
+    {
+        switch (type)
+        {
+            case EGameEventType.MoveSelected:
+                HandleMoveSelected();
+                break;
+
+            case EGameEventType.SkillSelected:
+                if (payload is SkillSelectedPayload skillPayload)
+                    HandleSkillSelected(skillPayload.skillIndex);
+                break;
+
+            case EGameEventType.CylinderSpinEnd:
+                if (payload is CylinderSpinPayload spinPayload)
+                    HandleCylinderSpin(spinPayload.bullets);
+                break;
+
+            case EGameEventType.TurnSkip:
+                HandleTurnSkip();
+                break;
+        }
+    }
     private void HandleMoveSelected()
     {
         mActionQueue.Enqueue(new WaitInputNode(mPlayerEntity));
@@ -83,7 +115,7 @@ public class PlayerTurnStateMachine : TurnStateMachine
     private void HandleCylinderSpin(List<EBulletType> bullets) 
     {
         mSelectedBullets = bullets;
-        mActionQueue.Enqueue(new TargetSelectNode(mSelectedSkill));
+        mActionQueue.Enqueue(new TargetSelectNode(mSelectedSkill, mEventChannel));
         BattleManager.Instance.BroadCastTurnInfo("Select target to use");
     }
     private void HandleSkillSelected(int skillIndex)
@@ -95,11 +127,40 @@ public class PlayerTurnStateMachine : TurnStateMachine
             if (mPlayerEntity.currUnitAP >= selectedSkill.skillCost)
             {
                 mSelectedSkill = selectedSkill;
-                if (mSelectedSkill.targetType == EEntityType.Enemy) 
+                if (mSelectedSkill.targetType == EEntityType.Enemy)
                 {
-                    Events.RaiseOpenCylinderUI();
+                    var enemies = StageManager.Instance.GetEnemyUnits();
+                    bool hasVisibleEnemy = false;
+                    Vector3Int casterPos = mPlayerEntity.GetPosition() + new Vector3Int(0, -1, 0);
 
-                    mActionQueue.Enqueue(new WaitNode());
+                    foreach (var enemy in enemies) 
+                    {
+                        Vector3Int enemyPos = enemy.GetPosition() + new Vector3Int(0, -1, 0);
+                        int dist = AStarPathFinder.Heuristic(casterPos, enemyPos);
+                        if (dist <= mSelectedSkill.skillRange && dist <= mPlayerEntity.currUnitViewRange) 
+                        {
+                            hasVisibleEnemy = true;
+                            break;
+                        }
+                    }
+
+                    if (hasVisibleEnemy) 
+                    {
+                        //적 대상
+                        mEventChannel.RaiseEvent(EGameEventType.OpenCylinderUI);
+                        mActionQueue.Enqueue(new WaitNode());
+                    }
+                    else
+                    {
+                        BattleManager.Instance.BroadCastTurnInfo("No Valid Target");
+                        mActionQueue.Enqueue(new WaitNode());
+                    }
+                }
+                else 
+                {
+                    //아군 대상
+                    mActionQueue.Enqueue(new TargetSelectNode(mSelectedSkill, mEventChannel));
+                    BattleManager.Instance.BroadCastTurnInfo("Select target to use");
                 }
             }
             else 
@@ -129,9 +190,6 @@ public class PlayerTurnStateMachine : TurnStateMachine
 
     public override void Dispose()
     {
-        Events.OnMoveSelected -= HandleMoveSelected;
-        Events.OnSkillSelected -= HandleSkillSelected;
-        Events.OnCylinderSpin -= HandleCylinderSpin;
-        Events.OnTurnSkip -= HandleTurnSkip;
+        mEventChannel.OnEventRaised -= HandleGameEvent;
     }
 }

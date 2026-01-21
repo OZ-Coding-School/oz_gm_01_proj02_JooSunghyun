@@ -15,16 +15,28 @@ public class UpgradeUI : MonoBehaviour
 
     private List<UpgradeSO> currentChoices;
 
+    [Header("Event Channel")]
+    [SerializeField] private GameEventChannelSO mEventChannel;
     private void Awake()
     {
         instance = this;
         gameObject.SetActive(false);
-        Events.OnLevelUp += ShowUpgrades;
+        mEventChannel.OnEventRaised += HandleGameEvent;
+
     }
     private void OnDestroy()
     {
-        Events.OnLevelUp -= ShowUpgrades;
+        mEventChannel.OnEventRaised -= HandleGameEvent;
+
     }
+    private void HandleGameEvent(EGameEventType type, object payload)
+    {
+        if (type == EGameEventType.LevelUp && payload is LevelUpPayload levelPayload)
+        {
+            ShowUpgrades(levelPayload.newLevel, levelPayload.choices);
+        }
+    }
+
     private void ShowUpgrades(int level, List<UpgradeSO> choices) 
     {
         currentChoices = choices;
@@ -50,7 +62,9 @@ public class UpgradeUI : MonoBehaviour
 
     public void OnUpgradeSelected(UpgradeSO selected) 
     {
-        Events.RaiseUpgradeSelected(selected);
+        var payload = new UpgradeSelectedPayload { selected = selected };
+        mEventChannel.RaiseEvent(EGameEventType.UpgradeSelected, payload);
+
         gameObject.SetActive(false);
     }
 }

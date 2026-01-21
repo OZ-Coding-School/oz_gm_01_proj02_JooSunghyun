@@ -18,28 +18,48 @@ public class UpgradeManager : MonoBehaviour
     public List<IUpgradeEffect> activeUpgrades = new List<IUpgradeEffect>();
 
     private Entity mPlayer;
+
+    [Header("Event Channel")]
+    [SerializeField] private GameEventChannelSO mEventChannel;
     private void Awake()
     {
         Instance = this;
         revolverCylinder = new RevolverSylinder();
-
-        if (GameObject.FindWithTag(Define.Player).TryGetComponent(out Entity entity))
-        {
-            mPlayer = entity;
-        }
     }
 
     private void OnEnable()
     {
-        Events.OnStageChange += UpdateApplyUpgrade;
-        Events.OnUpgradeSelected += ApplyUpgrade;
-        Events.OnEntityDied += AddExp;
+        mEventChannel.OnEventRaised += HandleGameEvent;
     }
     private void OnDisable()
     {
-        Events.OnStageChange -= UpdateApplyUpgrade;
-        Events.OnUpgradeSelected -= ApplyUpgrade;
-        Events.OnEntityDied -= AddExp;
+        mEventChannel.OnEventRaised -= HandleGameEvent;
+    }
+
+    private void HandleGameEvent(EGameEventType type, object payload)
+    {
+        switch (type)
+        {
+            case EGameEventType.StageChange:
+                if (payload is StageChangePayload stagePayload)
+                    UpdateApplyUpgrade(stagePayload.stageLevel);
+                break;
+
+            case EGameEventType.UpgradeSelected:
+                if (payload is UpgradeSelectedPayload upgradePayload)
+                    ApplyUpgrade(upgradePayload.selected);
+                break;
+
+            case EGameEventType.EntityDied:
+                if (payload is EntityDiedPayload diedPayload)
+                    AddExp(diedPayload.entity);
+                break;
+
+            case EGameEventType.PlayerSpawned:
+                if (payload is PlayerSpawnedPayload p)
+                    mPlayer = p.entity;
+                break;
+        }
     }
 
     public void AddExp(Entity entity)
@@ -61,7 +81,8 @@ public class UpgradeManager : MonoBehaviour
 
             List<UpgradeSO> choices = GetRandomUpgrades(3);
 
-            Events.RaiseLevelUp(playerLevel, choices);
+            var payload = new LevelUpPayload { newLevel = playerLevel, choices = choices };
+            mEventChannel.RaiseEvent(EGameEventType.LevelUp, payload);
         }
     }
 
