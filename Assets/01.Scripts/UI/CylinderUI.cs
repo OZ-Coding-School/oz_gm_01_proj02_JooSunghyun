@@ -12,26 +12,34 @@ public class CylinderUI : MonoBehaviour, IDragHandler, IEndDragHandler
     public List<Sprite> bulletImages;
     private float mRotationSpeed;
     private RevolverSylinder mCylinder;
+    private bool mIsSpinning = false;
 
     public GameObject mEffectInfoPanel;
     public TextMeshProUGUI mEffectTExt;
 
     private WaitForSeconds mWaitForSeconds = new WaitForSeconds(0.9f);
+
+    [Header("EventChannel")]
+    [SerializeField] private GameEventChannelSO mEventChannel;
+
     private void Awake()
     {
-        Events.OnOpenCylinderUI += HandleOpenCylinderUI;
+        mEventChannel.OnEventRaised += HandleGameEvent;
         gameObject.SetActive(false);
         mEffectInfoPanel.SetActive(false);
     }
     private void OnDestroy()
     {
-        Events.OnOpenCylinderUI -= HandleOpenCylinderUI;
+        mEventChannel.OnEventRaised -= HandleGameEvent;
     }
 
-    private void HandleOpenCylinderUI() 
+    private void HandleGameEvent(EGameEventType type, object payload) 
     {
-        gameObject.SetActive(true);
-        ReloadCylinder();
+        if (type == EGameEventType.OpenCylinderUI) 
+        {
+            gameObject.SetActive(true);
+            ReloadCylinder();
+        }
     }
 
     public void ReloadCylinder() 
@@ -43,7 +51,6 @@ public class CylinderUI : MonoBehaviour, IDragHandler, IEndDragHandler
         Debug.Log(bulletSlots.Count);
         for (int i = 0; i < bulletSlots.Count; i++) 
         {
-            Debug.Log("enum count"+(int)bullets[i]);
             bulletSlots[i].sprite = bulletImages[(int)bullets[i]];
         }
     }
@@ -52,11 +59,18 @@ public class CylinderUI : MonoBehaviour, IDragHandler, IEndDragHandler
     {
         mRotationSpeed = eventData.delta.x;
         cylinderTransform.Rotate(Vector3.forward, mRotationSpeed);
+
+        if (!mIsSpinning) 
+        {
+            mIsSpinning = true;
+            mEventChannel.RaiseEvent(EGameEventType.CylinderSpinStart);
+        }
     }
 
     public void OnEndDrag(PointerEventData eventData) 
     {
         StartCoroutine(SlowDownCo());
+        mIsSpinning = false;
     }
 
     private IEnumerator SlowDownCo() 
@@ -91,18 +105,21 @@ public class CylinderUI : MonoBehaviour, IDragHandler, IEndDragHandler
         EBulletType selectedBullet = mCylinder.GetBullets()[selectedIndex];
 
         mEffectInfoPanel.SetActive(true);
-        SetEffevtText(selectedBullet);
-        yield return mWaitForSeconds;
+        SetEffectText(selectedBullet);
 
         List<EBulletType> bullets = new List<EBulletType>();
         bullets.Add(selectedBullet);
 
-        Events.RaiseCylinderSpin(bullets);
+        var paload = new CylinderSpinPayload { bullets = new List<EBulletType> { selectedBullet } };
+        mEventChannel.RaiseEvent(EGameEventType.CylinderSpinEnd, paload);
+
+        yield return mWaitForSeconds;
+
         mEffectInfoPanel.SetActive(false);
         gameObject.SetActive(false);
     }
 
-    private void SetEffevtText(EBulletType bullet) 
+    private void SetEffectText(EBulletType bullet) 
     {
         switch (bullet) 
         {

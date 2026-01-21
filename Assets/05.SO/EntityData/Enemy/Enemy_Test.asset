@@ -19,7 +19,7 @@ MonoBehaviour:
   unitAP: 5
   unitViewRange: 8
   unitHP: 20
-  unitAttack: 10
+  unitAttack: 20
   unitDefense: 10
   unitExp: 6
   skills:

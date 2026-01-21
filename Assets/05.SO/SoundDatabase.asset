@@ -12,5 +12,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2aed3bca9c4a80440952d3ffd3273366, type: 3}
   m_Name: SoundDatabase
   m_EditorClassIdentifier: Assembly-CSharp::SoundDatabase
-  bgmEntries: []
-  sfxEntries: []
+  bgmEntries:
+  - type: 1
+    clip: {fileID: 8300000, guid: 86be9ed37d0f6c7468ec3022987f790a, type: 3}
+  sfxEntries:
+  - type: 0
+    clip: {fileID: 8300000, guid: 568e553ef2b7ef84aa07621801c35d11, type: 3}
+  - type: 1
+    clip: {fileID: 8300000, guid: 113512454c2fee149b043afad69b381f, type: 3}
+  - type: 2
+    clip: {fileID: 8300000, guid: 881e3f52c86c94f26a60718d35627cd8, type: 3}
+  - type: 3
+    clip: {fileID: 8300000, guid: 79180f511d89441b9aa23ccae1992fe0, type: 3}
+  - type: 4
+    clip: {fileID: 8300000, guid: ffb159a21c8a04135a5616979c828fab, type: 3}
+  - type: 5
+    clip: {fileID: 8300000, guid: 374faa4a996d97f4eb94129e7f22d669, type: 3}
+  - type: 6
+    clip: {fileID: 8300000, guid: 29eb481dd0cfdc24db798500f20b3608, type: 3}
+  - type: 7
+    clip: {fileID: 8300000, guid: 0a059ef262620c141a8be0f97891508f, type: 3}
+  - type: 7
+    clip: {fileID: 8300000, guid: 0a059ef262620c141a8be0f97891508f, type: 3}

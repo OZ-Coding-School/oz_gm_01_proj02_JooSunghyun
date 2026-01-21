@@ -1,4 +1,9 @@
 using UnityEngine;
+public enum ESkillType
+{
+    NormalAttack,
+    NormalHeal,
+}
 
 public class SkillFactory
 {

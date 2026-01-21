@@ -19,3 +19,4 @@ MonoBehaviour:
   skillRange: 20
   targetType: 2
   skillType: 0
+  skillSound: {fileID: 8300000, guid: 113512454c2fee149b043afad69b381f, type: 3}

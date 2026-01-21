@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Collections;
 using UnityEngine;
-using Unity.VisualScripting;
 
 public class Entity : MonoBehaviour
 {
@@ -25,6 +24,9 @@ public class Entity : MonoBehaviour
     private TileBase mMyTile;
     //데이터 받아오기
     private EntityDataSO unitData;
+
+    [Header("EventChannel")]
+    [SerializeField] protected GameEventChannelSO mEventChannel;
 
     public void SetUp(EntityDataSO data, int x, int y, int z)
     {
@@ -66,6 +68,36 @@ public class Entity : MonoBehaviour
             mMyTile = tile;
         }    
     }
+    private Entity FindClosestEnemy() 
+    {
+        List<Entity> entities = new List<Entity>();
+
+        if (GetUnitData().unitType == EEntityType.PlayerUnit)
+        {
+            entities = StageManager.Instance.GetEnemyUnits();
+        }
+        else if (GetUnitData().unitType == EEntityType.Enemy) 
+        {
+            entities = StageManager.Instance.GetPlayerUnits();
+        }
+
+        Entity closestEnemy = null;
+        float minDist = float.MaxValue;
+
+        foreach (var entity in entities) 
+        {
+            if (entity == null || !entity.gameObject.activeSelf) continue;
+
+            float dist = Vector3.Distance(transform.position, entity.transform.position);
+            if (dist < minDist) 
+            {
+                minDist = dist;
+                closestEnemy = entity;
+            }
+        }
+        return closestEnemy;
+    }
+
     //이동 알고리즘
     public void Move(List<Vector3Int> path) 
     {
@@ -107,14 +139,15 @@ public class Entity : MonoBehaviour
                 StageManager.Instance.UpdateVisibility(this, currUnitViewRange);
             }
         }
-
-        transform.rotation = Quaternion.identity;
-    }
-
-    //공격 알고리즘
-    public void UseSkill(SkillSO skill, Entity target) 
-    {
-
+        if (FindClosestEnemy() != null)
+        {
+            Vector3 lookPos = FindClosestEnemy().transform.position;
+            transform.LookAt(new Vector3(lookPos.x, 0, lookPos.z));
+        }
+        else 
+        {
+            transform.rotation = Quaternion.identity;
+        }
     }
 
     public void ResetTempMultiplier()
@@ -142,7 +175,8 @@ public class Entity : MonoBehaviour
         if (currUnitAP < 0) { bonusAP -= Mathf.Abs(currUnitAP); }
         if (this.isActiveAndEnabled) 
         {
-            Events.RaiseAPUpdate(currUnitAP + bonusAP);
+            var payload = new APUpdatePayload { ap = currUnitAP + bonusAP };
+            mEventChannel.RaiseEvent(EGameEventType.APUpdate, payload);
         }
     }
     #endregion

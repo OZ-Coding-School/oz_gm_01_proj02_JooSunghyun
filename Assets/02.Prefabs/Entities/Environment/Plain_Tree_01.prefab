@@ -103,3 +103,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 45bfd89ba5094bf429059342651b7ef7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NeutralBase
+  currUnitHP: 0
+  currUnitAttack: 0
+  currUnitDefense: 0
+  currUnitAP: 0
+  currUnitViewRange: 0
+  bonusAP: 0
+  tempAttackMultiplier: 1
+  tempDefenseMultiplier: 1
+  mEventChannel: {fileID: 11400000, guid: fb2cf7863f5613c44ab25e1f698cf8d5, type: 2}

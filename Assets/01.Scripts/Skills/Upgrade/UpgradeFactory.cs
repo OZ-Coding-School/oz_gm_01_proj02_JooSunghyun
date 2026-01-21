@@ -1,4 +1,12 @@
 using UnityEngine;
+public enum EUpgradeEffectType
+{
+    AttackBoost,
+    DefenseBoost,
+    APBoost,
+    CriticalBullet,
+    HealBullet
+}
 
 public static class UpgradeFactory
 {

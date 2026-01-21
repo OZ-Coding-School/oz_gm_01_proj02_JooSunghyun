@@ -8,9 +8,11 @@ public class EnemyTurnStateMachine : TurnStateMachine
     private Entity mCurrEntity;
     private WaitForSeconds mWaitForSeconds = new WaitForSeconds(UnityEngine.Random.Range(0.6f, 1.2f));
 
-    public EnemyTurnStateMachine(Entity entity) : base(entity)
+    private GameEventChannelSO mEventChannel;
+    public EnemyTurnStateMachine(Entity entity, GameEventChannelSO channel) : base(entity)
     {
         mCurrEntity = entity;
+        mEventChannel = channel;
     }
 
     public override void StartTurn()
@@ -19,7 +21,10 @@ public class EnemyTurnStateMachine : TurnStateMachine
         //이벤트 발행
         BattleManager.Instance.BroadCastTurnInfo("Enemy Turn Start");
         BattleManager.Instance.BroadCastSkillUIInfo(mCurrEntity.GetUnitData().skills);
-        Events.RaiseAPUpdate(mCurrEntity.currUnitAP + mCurrEntity.bonusAP);
+
+        var apPayload = new APUpdatePayload { ap = mCurrentEntity.currUnitAP + mCurrentEntity.bonusAP };
+        mEventChannel.RaiseEvent(EGameEventType.APUpdate, apPayload);
+
         BattleManager.Instance.StartCoroutine(EnemyActionCo());
     }
 
@@ -30,20 +35,41 @@ public class EnemyTurnStateMachine : TurnStateMachine
         //타겟 선택
         var players = StageManager.Instance.GetPlayerUnits();
         Entity target = players[0];
-        
         //이동
         Vector3Int currPos = mCurrEntity.GetPosition() + new Vector3Int(0, -1, 0);
-        var reachableTiles = AStarPathFinder.GetReachableTiles(
+
+        SkillSO attackSkill = mCurrEntity.GetUnitData().skills[0];
+        int skillRange = (int)attackSkill.skillRange;
+
+        int dist = AStarPathFinder.Heuristic(currPos, target.GetPosition());
+
+        if (dist <= skillRange)
+        {
+            BattleManager.Instance.BroadCastTurnInfo("Enemy Attack");
+            yield return mWaitForSeconds;
+
+            ISkillAction baseSkill = SkillFactory.CreateSkill(attackSkill);
+            List<EBulletType> enemyBullets = new List<EBulletType> { GetRandomBullet() };
+            ISkillAction decoratedSkill = BulletFactory.ApplyBulletEffect(enemyBullets, baseSkill);
+
+            mActionQueue.Enqueue(new AttackNode(decoratedSkill, attackSkill, target, mEventChannel));
+        }
+        else 
+        {
+            var reachableTiles = AStarPathFinder.GetReachableTiles(
             currPos, mCurrEntity.currUnitAP, StageManager.Instance.GetWalkableTiles());
 
-        Vector3Int targetPos = target.GetPosition();
-        if (!reachableTiles.Contains(targetPos)) 
-        {
-            targetPos = FindClosestTile(reachableTiles, target.GetPosition());
+            Vector3Int targetPos = FindClosestTile(reachableTiles, target.GetPosition(), skillRange);
+          
+            BattleManager.Instance.BroadCastTurnInfo("Moving...");
+            yield return mWaitForSeconds;
+            mActionQueue.Enqueue(new MoveNode(targetPos, mEventChannel));
         }
-        BattleManager.Instance.BroadCastTurnInfo("Moving...");
+    }
+
+    private IEnumerator WaitCo() 
+    {
         yield return mWaitForSeconds;
-        mActionQueue.Enqueue(new MoveNode(targetPos));
     }
 
     public override void Update() 
@@ -57,6 +83,8 @@ public class EnemyTurnStateMachine : TurnStateMachine
 
                 if (currentNode is MoveNode)
                 {
+                    BattleManager.Instance.StartCoroutine(WaitCo());
+
                     Entity target = StageManager.Instance.GetPlayerUnits()[0];
                     SkillSO attackSkill = mCurrEntity.GetUnitData().skills[0];
 
@@ -67,7 +95,7 @@ public class EnemyTurnStateMachine : TurnStateMachine
 
                     ISkillAction decoratedSkill = BulletFactory.ApplyBulletEffect(enemyBullets, baseSkill);
 
-                    mActionQueue.Enqueue(new AttackNode(decoratedSkill, attackSkill, target));
+                    mActionQueue.Enqueue(new AttackNode(decoratedSkill, attackSkill, target, mEventChannel));
                 }
                 else if (currentNode is AttackNode) 
                 {
@@ -77,26 +105,35 @@ public class EnemyTurnStateMachine : TurnStateMachine
         }
     }
 
-    private void EndTurn() 
+    private Vector3Int FindClosestTile(HashSet<Vector3Int> reachableTiles, Vector3Int playerPos, int range) 
     {
-        BattleManager.Instance.EndCurrentTurn();
-    }
-
-    private Vector3Int FindClosestTile(HashSet<Vector3Int> reachableTiles, Vector3Int playerPos) 
-    {
-        Vector3Int closest = playerPos;
-        int minDist = int.MaxValue;
+        Vector3Int bestTile = mCurrEntity.GetPosition();
+        int maxDist = -1;
 
         foreach (var tile in reachableTiles) 
         {
+            if (tile == playerPos) continue;
             int dist = AStarPathFinder.Heuristic(playerPos, tile);
-            if (dist < minDist) 
+            if (dist <= range && dist > maxDist) 
             {
-                minDist = dist;
-                closest = tile;
+                maxDist = dist;
+                bestTile = tile;
             }
         }
-        return closest;
+        if (maxDist == -1) 
+        {
+            int minDist = int.MaxValue;
+            foreach (var tile in reachableTiles) 
+            {
+                int dist = AStarPathFinder.Heuristic(playerPos, tile);
+                if (dist < minDist) 
+                {
+                    minDist = dist;
+                    bestTile = tile;
+                }
+            }
+        }
+        return bestTile;
     }
 
     private EBulletType GetRandomBullet() 
