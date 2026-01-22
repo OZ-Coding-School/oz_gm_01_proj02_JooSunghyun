@@ -103,7 +103,7 @@ public class UpgradeManager : MonoBehaviour
     {
         CheckPlayer();
 
-        IUpgradeEffect effect = UpgradeFactory.CreateEffect(upgrade);
+        IUpgradeEffect effect = UpgradeFactory.CreateEffect(upgrade, mEventChannel);
         activeUpgrades.Add(effect);
         effect.Apply(mPlayer);
     }
@@ -123,7 +123,7 @@ public class UpgradeManager : MonoBehaviour
 
     private void CheckPlayer() 
     {
-        if (!mPlayer.isActiveAndEnabled)
+        if (mPlayer == null || !mPlayer.isActiveAndEnabled)
         {
             if (GameObject.FindWithTag(Define.Player).TryGetComponent(out Entity entity))
             {

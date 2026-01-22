@@ -126,6 +126,7 @@ public class BattleManager : MonoBehaviour
         else if (StageManager.Instance.GetPlayerUnits().Count == 0) 
         {
             //패배처리
+            BattleSceneUI.instance.GameEnd();
         }
     }
 
@@ -161,6 +162,7 @@ public class BattleManager : MonoBehaviour
     }
     private IEnumerator LoadNextStageCo() 
     {
+        BroadCastTurnInfo("Load Next Map");
         yield return mWaitForSeconds;
         StageManager.Instance.LoadNextStage();
     }

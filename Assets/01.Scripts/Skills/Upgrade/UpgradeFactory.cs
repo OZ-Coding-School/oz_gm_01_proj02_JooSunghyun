@@ -10,7 +10,7 @@ public enum EUpgradeEffectType
 
 public static class UpgradeFactory
 {
-    public static IUpgradeEffect CreateEffect(UpgradeSO upgrade) 
+    public static IUpgradeEffect CreateEffect(UpgradeSO upgrade, GameEventChannelSO channel) 
     {
         switch (upgrade.effectType) 
         {
@@ -19,7 +19,7 @@ public static class UpgradeFactory
             case EUpgradeEffectType.DefenseBoost:
                 return new DefenseBoostEffect(upgrade.value);
             case EUpgradeEffectType.APBoost:
-                return new APBoostEffect(upgrade.value);
+                return new APBoostEffect(upgrade.value, channel);
             case EUpgradeEffectType.CriticalBullet:
                 return new CriticalBulletEffect(upgrade.value);
             case EUpgradeEffectType.HealBullet:

@@ -5,6 +5,8 @@ using TMPro;
 
 public class BattleSceneUI : MonoBehaviour
 {
+    public static BattleSceneUI instance { get; private set; }
+
     public Button endTurnButton;
 
     public Button skillButton_1;
@@ -25,15 +27,34 @@ public class BattleSceneUI : MonoBehaviour
 
     public DamagePopUpUI damagePopUpUI;
 
-    private Vector3 mPopUpOffset = new Vector3(4, 4, 0);
+    private Vector3 mPopUpOffset = new Vector3(5, 5, 0);
 
     [Header("EventChannel")]
     [SerializeField] private GameEventChannelSO mEventChannel;
+
+    [Header("Result")]
+    public GameObject resultPanel;
+
+    public TextMeshProUGUI resultStageText;
+
+    public TextMeshProUGUI resultKillText;
+    public TextMeshProUGUI resultSkillText;
+    public TextMeshProUGUI resultDamageText;
+    public TextMeshProUGUI resultTakenText;
+    public TextMeshProUGUI resultTurnText;
+
+    public TextMeshProUGUI resultUpgradeText;
+
+    public TextMeshProUGUI resultRankText;
+    private void Awake()
+    {
+        instance = this;
+    }
     private void Start()
     {
+        resultPanel.SetActive(false);
         PoolManager.Instance.CreatePool(damagePopUpUI, 5, null);   
     }
-
     private void OnEnable()
     {
         mEventChannel.OnEventRaised += HandleGameEvent;
@@ -44,12 +65,10 @@ public class BattleSceneUI : MonoBehaviour
             mEventChannel.RaiseEvent(EGameEventType.TurnSkip);
         });
     }
-
     private void OnDisable()
     {
         mEventChannel.OnEventRaised -= HandleGameEvent;
     }
-
     private void HandleGameEvent(EGameEventType type, object payload)
     {
         switch (type)
@@ -80,7 +99,6 @@ public class BattleSceneUI : MonoBehaviour
                 break;
         }
     }
-
     private void UpdateSkillUI(List<SkillSO> skills)
     {
         if (skills.Count > 0)
@@ -123,33 +141,49 @@ public class BattleSceneUI : MonoBehaviour
         });
 
     }
-
     private void UpdateTurnInfo(string text) 
     {
         turnInfoText.text = text;
     }
-
     private void UpdateAPInfo(int ap) 
     {
         apInfoText.text = $"{ap}AP";
     }
-
     private void UpdateStageInfo(int stageLevel) 
     {
         int front = (stageLevel - 1) / 10 + 1;
         int back = (stageLevel - 1) % 10 + 1;
         stageInfoText.text = $"Stage {front} - {back}";
     }
-
     private void PopUpDamage(float damage, Entity caster, Entity target) 
     {
         DamagePopUpUI popUp = PoolManager.Instance.GetFromPool(damagePopUpUI);
         popUp.transform.position = target.transform.position + mPopUpOffset;
         popUp.SetDamage((int)damage);
     }
-
     public void PopUp(GameObject popUp) 
     {
         popUp.SetActive(!popUp.activeSelf);
+    }
+    public void GameEnd() 
+    {
+        resultPanel.SetActive(true);
+
+        resultStageText.text = stageInfoText.text;
+
+        resultKillText.text = $"Enemy Killed : {BattleStats.Instance.killCount}";
+        resultSkillText.text = $"Skill Used : {BattleStats.Instance.skillUsedCount}";
+        resultDamageText.text = $"Total Damage Dealt : {BattleStats.Instance.totalDamageDealt}";
+        resultTakenText.text = $"Total Damage Taken : {BattleStats.Instance.totalDamageTaken}";
+        resultTurnText.text = $"Turns : {BattleStats.Instance.turnCount}";
+
+        var upgrades = UpgradeManager.Instance.activeUpgrades;
+        resultUpgradeText.text = "Upgrades :\n";
+        foreach (var up in upgrades) 
+        {
+            resultUpgradeText.text += $"- {up.GetType().Name}\n";
+        }
+
+        resultRankText.text = BattleStats.Instance.GetRank();
     }
 }

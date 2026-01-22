@@ -261,6 +261,9 @@ public class AttackNode : BTNode
   
         if (mSkillAction != null && mTarget != null) 
         {
+            Vector3 lookPos = mTarget.transform.position;
+            entity.transform.LookAt(new Vector3(lookPos.x, 0, lookPos.z));
+
             mSkillAction.SkillAction(entity, mTarget);
             //¿Ã∆Â∆Æ
             EffectManager.Instance.PlayEffect(EEffectType.MuzzleFlash, entity.transform.position);

@@ -62,7 +62,6 @@ public class StageManager : MonoBehaviour
     }
     public void InitializeStage() 
     {
-        Debug.Log("Stage Initialize");
         ClearStage();
         GenerateBase();
         GenerateMap();

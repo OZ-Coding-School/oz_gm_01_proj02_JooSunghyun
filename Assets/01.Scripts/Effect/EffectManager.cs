@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public enum EEffectType { MuzzleFlash, BulletTrail, HitSpark }
+public enum EEffectType { MuzzleFlash, BulletTrail, HitSpark, MoveDust }
 
 public class EffectManager : MonoBehaviour
 {
@@ -9,6 +9,7 @@ public class EffectManager : MonoBehaviour
     [SerializeField] private Effect mMuzzleFlashPrefab;
     [SerializeField] private Effect mBulletTrailPrefab;
     [SerializeField] private Effect mHitSparkPrefab;
+    [SerializeField] private Effect mMoveDustPrefab;
 
     private void Awake()
     {
@@ -17,6 +18,7 @@ public class EffectManager : MonoBehaviour
         PoolManager.Instance.CreatePool(mMuzzleFlashPrefab, 5, null);
         PoolManager.Instance.CreatePool(mBulletTrailPrefab, 5, null);
         PoolManager.Instance.CreatePool(mHitSparkPrefab, 5, null);
+        PoolManager.Instance.CreatePool(mMoveDustPrefab, 10, null);
     }
 
     public void PlayEffect(EEffectType type, Vector3 position) 
@@ -29,6 +31,9 @@ public class EffectManager : MonoBehaviour
                 break;
             case EEffectType.HitSpark:
                 prefab = mHitSparkPrefab;
+                break;
+            case EEffectType.MoveDust:
+                prefab = mMoveDustPrefab;
                 break;
         }
         if (prefab != null) 
