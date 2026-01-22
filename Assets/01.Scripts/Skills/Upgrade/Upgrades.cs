@@ -26,12 +26,19 @@ public class DefenseBoostEffect : IUpgradeEffect
 public class APBoostEffect : IUpgradeEffect
 {
     private float mBonusAP;
-    public APBoostEffect(float bonusAP) => mBonusAP = bonusAP;
+    private GameEventChannelSO mEventChannel;
+    public APBoostEffect(float bonusAP, GameEventChannelSO channel) 
+    {
+        mBonusAP = bonusAP;
+        mEventChannel = channel;
+    }
 
     public void Apply(Entity caster)
     {
         caster.bonusAP += (int)mBonusAP;
-        Events.RaiseAPUpdate(caster.currUnitAP + caster.bonusAP);
+
+        var payload = new APUpdatePayload { ap = caster.currUnitAP + caster.bonusAP };
+        mEventChannel.RaiseEvent(EGameEventType.APUpdate, payload);
     }
 }
 public class CriticalBulletEffect : IUpgradeEffect
