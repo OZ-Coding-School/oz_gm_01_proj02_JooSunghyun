@@ -48,6 +48,13 @@ public class BattleStats : MonoBehaviour
                 }
                 break;
 
+            case EGameEventType.SkillUsed:
+                if (payload is SkillUsedPayload )
+                {
+                    skillUsedCount++;
+                }
+                break;
+
             case EGameEventType.TurnInfoUpdate:
                 turnCount++;
                 break;

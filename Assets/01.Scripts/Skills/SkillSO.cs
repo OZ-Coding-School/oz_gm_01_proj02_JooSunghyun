@@ -1,5 +1,4 @@
 using UnityEngine;
-using System;
 
 [CreateAssetMenu(fileName = "SkillSO", menuName = "Scriptable Objects/SkillSO")]
 public class SkillSO : ScriptableObject

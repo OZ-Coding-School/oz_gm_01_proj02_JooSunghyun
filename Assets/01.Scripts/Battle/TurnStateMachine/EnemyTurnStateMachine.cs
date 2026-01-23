@@ -17,7 +17,6 @@ public class EnemyTurnStateMachine : TurnStateMachine
 
     public override void StartTurn()
     {
-        mCurrEntity.currUnitAP += mCurrEntity.GetUnitData().unitAP;
         //이벤트 발행
         BattleManager.Instance.BroadCastTurnInfo("Enemy Turn Start");
         BattleManager.Instance.BroadCastSkillUIInfo(mCurrEntity.GetUnitData().skills);

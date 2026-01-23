@@ -9,6 +9,12 @@ public class Entity : MonoBehaviour
     private int mPosZ;
     private float mMoveSpeed = 5f;
 
+    public float baseHP;
+    public float baseAttack = 10;
+    public float baseDefense = 10;
+    public int baseAP;
+    public int baseViewRange;
+
     public float currUnitHP;
     public float currUnitAttack;
     public float currUnitDefense;
@@ -35,11 +41,17 @@ public class Entity : MonoBehaviour
         mPosY = y;
         mPosZ = z;
 
-        currUnitHP = data.unitHP;
-        currUnitAttack = data.unitAttack;
-        currUnitDefense = data.unitDefense;
-        currUnitAP = data.unitAP;
-        currUnitViewRange = data.unitViewRange;
+        baseHP = data.unitHP;
+        baseAttack = data.unitAttack;
+        baseDefense = data.unitDefense;
+        baseAP = data.unitAP;
+        baseViewRange = data.unitViewRange;
+
+        currUnitHP = baseHP;
+        currUnitAttack = baseAttack;
+        currUnitDefense = baseDefense;
+        currUnitAP = baseAP;
+        currUnitViewRange = baseViewRange;
 
         mHealthBar = GetComponentInChildren<HealthBar>();
         if (mHealthBar != null) 

@@ -3,9 +3,10 @@ using UnityEngine;
 
 public class UpgradeManager : MonoBehaviour
 {
-    public static UpgradeManager Instance { get; private set; }
     //레벨업 강화 시스템
     //총알 추첨 시스템
+    public static UpgradeManager Instance { get; private set; }
+
     public RevolverSylinder revolverCylinder;
 
     public int playerLevel = 0;
@@ -101,8 +102,6 @@ public class UpgradeManager : MonoBehaviour
 
     private void ApplyUpgrade(UpgradeSO upgrade)
     {
-        CheckPlayer();
-
         IUpgradeEffect effect = UpgradeFactory.CreateEffect(upgrade, mEventChannel);
         activeUpgrades.Add(effect);
         effect.Apply(mPlayer);
@@ -110,24 +109,11 @@ public class UpgradeManager : MonoBehaviour
 
     private void UpdateApplyUpgrade(int i) 
     {
-        CheckPlayer();
-
         if (activeUpgrades.Count > 0) 
         {
             foreach (var upgrade in activeUpgrades) 
             {
                 upgrade.Apply(mPlayer);
-            }
-        }
-    }
-
-    private void CheckPlayer() 
-    {
-        if (mPlayer == null || !mPlayer.isActiveAndEnabled)
-        {
-            if (GameObject.FindWithTag(Define.Player).TryGetComponent(out Entity entity))
-            {
-                mPlayer = entity;
             }
         }
     }

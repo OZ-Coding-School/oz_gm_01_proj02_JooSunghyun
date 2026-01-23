@@ -2,7 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-
 public class BattleManager : MonoBehaviour
 {
     public static BattleManager Instance { get; private set; }
@@ -162,6 +161,7 @@ public class BattleManager : MonoBehaviour
     }
     private IEnumerator LoadNextStageCo() 
     {
+        yield return null;
         BroadCastTurnInfo("Load Next Map");
         yield return mWaitForSeconds;
         StageManager.Instance.LoadNextStage();

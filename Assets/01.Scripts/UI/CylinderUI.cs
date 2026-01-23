@@ -48,7 +48,6 @@ public class CylinderUI : MonoBehaviour, IDragHandler, IEndDragHandler
         mCylinder.Reload();
 
         EBulletType[] bullets = mCylinder.GetBullets();
-        Debug.Log(bulletSlots.Count);
         for (int i = 0; i < bulletSlots.Count; i++) 
         {
             bulletSlots[i].sprite = bulletImages[(int)bullets[i]];
