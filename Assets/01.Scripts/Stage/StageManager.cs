@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 public class StageManager : MonoBehaviour
@@ -66,6 +65,7 @@ public class StageManager : MonoBehaviour
         GenerateBase();
         GenerateMap();
         SpawnEntities();
+        CameraController.Instance.SetTargets(new List<Transform> { mPlayerUnits[0].transform });
     }
     public void LoadNextStage() 
     {
@@ -75,10 +75,10 @@ public class StageManager : MonoBehaviour
         SetStage(nextStage);
         mCurrStageLevel++;
 
+        BattleManager.Instance.InitializeBattle();
+
         var payload = new StageChangePayload { stageLevel = mCurrStageLevel };
         mEventChannel.RaiseEvent(EGameEventType.StageChange, payload);
-
-        BattleManager.Instance.InitializeBattle();
     }
     private void HandleGameEvent(EGameEventType type, object payload) 
     {
@@ -196,15 +196,14 @@ public class StageManager : MonoBehaviour
                 case EEntityType.PlayerUnit:
                     newEntity.tag = Define.Player;
                     mPlayerUnits.Add(newEntity);
+                    var payload = new PlayerSpawnedPayload { entity = newEntity };
+                    mEventChannel.RaiseEvent(EGameEventType.PlayerSpawned, payload);
                     break;
                 case EEntityType.Enemy:
                     newEntity.tag = Define.Enemy;
                     mEnemyUnits.Add(newEntity);
                     break;
             }
-
-            var payload = new PlayerSpawnedPayload { entity = newEntity };
-            mEventChannel.RaiseEvent(EGameEventType.PlayerSpawned, payload);
         }
     }
     #endregion

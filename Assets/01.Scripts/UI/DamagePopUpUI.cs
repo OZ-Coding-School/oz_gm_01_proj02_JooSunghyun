@@ -16,7 +16,7 @@ public class DamagePopUpUI : MonoBehaviour
 
     public void SetDamage(int damage) 
     {
-        mDamageText.text = damage.ToString();
+        mDamageText.text = damage.ToString("F0");
         mDamageText.color = mOriginColor;
     }
 

@@ -1,5 +1,4 @@
-
-using System.Diagnostics;
+using UnityEngine;
 
 public class AttackBoostEffect : IUpgradeEffect 
 {
@@ -8,7 +7,7 @@ public class AttackBoostEffect : IUpgradeEffect
 
     public void Apply(Entity caster) 
     {
-        caster.currUnitAttack += mBonusDamage;
+        caster.currUnitAttack = caster.baseAttack + mBonusDamage;
     }
 }
 
@@ -19,7 +18,7 @@ public class DefenseBoostEffect : IUpgradeEffect
 
     public void Apply(Entity caster)
     {
-        caster.currUnitDefense += mBonusDefense;
+        caster.currUnitDefense = caster.baseDefense + mBonusDefense;
     }
 }
 
@@ -44,22 +43,30 @@ public class APBoostEffect : IUpgradeEffect
 public class CriticalBulletEffect : IUpgradeEffect
 {
     private float mChanceWeight;
-
-    public CriticalBulletEffect(float chanceWeight) => chanceWeight = mChanceWeight;
+    private bool mIsActivated = false;
+    public CriticalBulletEffect(float chanceWeight) => mChanceWeight = chanceWeight;
 
     public void Apply(Entity caster)
     {
-        UpgradeManager.Instance.revolverCylinder.BoostBulletChance(EBulletType.Critical, (int)mChanceWeight);
+        if (!mIsActivated)
+        {
+            mIsActivated = true;
+            UpgradeManager.Instance.revolverCylinder.BoostBulletChance(EBulletType.Critical, Mathf.CeilToInt(mChanceWeight));
+        }
     }
 }
 public class HealBulletEffect : IUpgradeEffect 
 {
     private float mChanceWeight;
+    private bool mIsActivated = false;
+    public HealBulletEffect(float chanceWeight) => mChanceWeight = chanceWeight;
 
-    public HealBulletEffect(float chanceWeight) => chanceWeight = mChanceWeight;
-
-    public void Apply(Entity caster) 
+    public void Apply(Entity caster)
     {
-        UpgradeManager.Instance.revolverCylinder.BoostBulletChance(EBulletType.Heal, (int)mChanceWeight);
+        if (!mIsActivated)
+        {
+            mIsActivated = true;
+            UpgradeManager.Instance.revolverCylinder.BoostBulletChance(EBulletType.Heal, Mathf.CeilToInt(mChanceWeight));
+        }
     }
 }

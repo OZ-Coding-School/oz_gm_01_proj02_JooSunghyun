@@ -1,4 +1,3 @@
-using Unity;
 using UnityEngine;
 
 public class PlayerUnitBase : Entity, IDamageable, ICameraChaseable

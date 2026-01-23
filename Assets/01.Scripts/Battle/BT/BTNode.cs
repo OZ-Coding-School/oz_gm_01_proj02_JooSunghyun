@@ -109,8 +109,10 @@ public class MoveNode : BTNode
         if (!mIsStarted && mPath != null && mPath.Count > 0)
         {
             BattleManager.Instance.BroadCastTurnInfo("Moving...");
-
             mEventChannel.RaiseEvent(EGameEventType.MoveStart);
+
+            CameraController.Instance.ClearTargets();
+            CameraController.Instance.SetTargets(new List<Transform> { entity.transform });
 
             entity.Move(mPath);
             mIsStarted = true;
@@ -125,6 +127,8 @@ public class MoveNode : BTNode
 
                 var payload = new MoveEventPayload { entity = entity, movedDistance = mPath.Count };
                 mEventChannel.RaiseEvent(EGameEventType.MoveEnd, payload);
+
+                CameraController.Instance.ClearTargets();
 
                 mIsCompleted = true;
             }       
@@ -152,6 +156,7 @@ public class TargetSelectNode : InputNode
         Vector3Int casterPos = entity.GetPosition() + new Vector3Int(0, -1, 0);
         //스킬 사용 가능한 대상 표시
         List<Entity> targets = new List<Entity>();
+        List<Transform> cameraTargets = new List<Transform>();
         switch (mSelectedSkill.targetType)
         {
             case EEntityType.Enemy:
@@ -162,6 +167,7 @@ public class TargetSelectNode : InputNode
                 if (!targets.Contains(entity)) targets.Add(entity);
                 break;
         }
+
         //사거리 계산
         foreach (var target in targets)
         {
@@ -171,33 +177,28 @@ public class TargetSelectNode : InputNode
             //스킬 범위 & 시야 범위 체크
             if (dist <= mSelectedSkill.skillRange && dist <= entity.currUnitViewRange)
             {
-                //Vector3 casterWoarldPos = entity.transform.position;
-                //Vector3 targetWorldPos = target.transform.position;
-                //Vector3 dir = (targetWorldPos - targetPos).normalized;
-                //float distance = Vector3.Distance(casterWoarldPos, targetWorldPos);
-
-                //실제 둘 사이에 장애물이 없는지
-                //if (Physics.Raycast(casterWoarldPos, dir, out RaycastHit hit, distance)) 
-                //{
-                //    if (hit.collider.gameObject == target.gameObject) 
-                //    {
-                //        mValidTargets.Add(target);
-                //        StageManager.Instance.ShowHiglight(target.gameObject.transform.position);
-                //    }
-                //}
                 mValidTargets.Add(target);
                 StageManager.Instance.ShowHiglight(target.gameObject.transform.position);
             }
         }
+
+        foreach (var target in mValidTargets)
+        {
+            cameraTargets.Add(target.transform);
+        }
+        cameraTargets.Add(entity.transform);
+
+        CameraController.Instance.ClearTargets();
+        CameraController.Instance.SetTargets(cameraTargets);
     }
     public override bool Evaluate(Entity entity) 
     {
+        if (mIsCompleted) { CameraController.Instance.ClearTargets(); }
         if (!mIsCalcullated) 
         {
             CheckRange(entity);
             mIsCalcullated = true;
         }
-
         if (mValidTargets.Count == 0)
         {
             mSelectedTarget = null;
@@ -261,6 +262,9 @@ public class AttackNode : BTNode
   
         if (mSkillAction != null && mTarget != null) 
         {
+            CameraController.Instance.ClearTargets();
+            CameraController.Instance.SetTargets(new List<Transform> { entity.transform, mTarget.transform });
+
             Vector3 lookPos = mTarget.transform.position;
             entity.transform.LookAt(new Vector3(lookPos.x, 0, lookPos.z));
 
@@ -275,6 +279,8 @@ public class AttackNode : BTNode
 
             var payload = new SkillUsedPayload { skill = mSkill, target = mTarget };
             mEventChannel.RaiseEvent(EGameEventType.SkillUsed, payload);
+
+            CameraController.Instance.ClearTargets();
         }
         mIsSkillUsed = true;
         return true;
